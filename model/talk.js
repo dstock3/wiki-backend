@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+
+// Comment Schema for storing individual comments
+const CommentSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  }
+});
+
+// Topic Schema to store discussion topics which include a list of comments
+const TopicSchema = new mongoose.Schema({
+  topicId: {
+    type: String,
+    required: true
+  },
+  topic: {
+    type: String,
+    required: true
+  },
+  comments: [CommentSchema]
+});
+
+// TalkPage Schema to store a list of topics associated with an article
+const TalkPageSchema = new mongoose.Schema({
+  articleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Article',
+    required: true
+  },
+  discussions: [TopicSchema]
+});
+
+module.exports = mongoose.model('TalkPage', TalkPageSchema);
