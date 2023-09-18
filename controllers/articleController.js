@@ -54,3 +54,19 @@ exports.deleteArticle = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.searchArticles = async (req, res) => {
+    try {
+      const query = req.query.query;
+  
+      const articles = await Article.find({
+        $text: {
+          $search: query
+        }
+      });
+  
+      res.status(200).json(articles);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+};
