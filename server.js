@@ -1,9 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
+require('./database.js');
 
 const app = express();
-const PORT = 3000;
+const PORT = 5000;
 
 app.use(bodyParser.json());
 app.use(morgan('combined'));
