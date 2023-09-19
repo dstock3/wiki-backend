@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const session = require('express-session');
+const cors = require('cors');
 const passport = require('passport');
 const initializePassport = require('./passport-config');  
 require('dotenv').config();
@@ -27,6 +28,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
+app.use(cors());
 app.use(passport.initialize());
 app.use(passport.session());
 
