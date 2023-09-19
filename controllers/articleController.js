@@ -21,7 +21,7 @@ exports.getAllArticles = async (req, res) => {
 
 exports.getArticleById = async (req, res) => {
     try {
-        const article = await Article.findById(req.params.id);
+        const article = await Article.findById(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
@@ -33,7 +33,7 @@ exports.getArticleById = async (req, res) => {
 
 exports.updateArticle = async (req, res) => {
     try {
-        const article = await Article.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
@@ -45,7 +45,7 @@ exports.updateArticle = async (req, res) => {
 
 exports.deleteArticle = async (req, res) => {
     try {
-        const article = await Article.findByIdAndRemove(req.params.id);
+        const article = await Article.findByIdAndRemove(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }

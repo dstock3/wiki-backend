@@ -11,7 +11,7 @@ exports.getAllPortals = async (req, res) => {
 
 exports.getPortalById = async (req, res) => {
     try {
-        const portal = await Portal.findById(req.params.id).populate('articles featuredArticle recentUpdates');
+        const portal = await Portal.findById(req.params.portalId).populate('articles featuredArticle recentUpdates');
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
@@ -33,7 +33,7 @@ exports.createPortal = async (req, res) => {
 
 exports.updatePortal = async (req, res) => {
     try {
-        const portal = await Portal.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const portal = await Portal.findByIdAndUpdate(req.params.portalId, req.body, { new: true });
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
@@ -45,7 +45,7 @@ exports.updatePortal = async (req, res) => {
 
 exports.deletePortal = async (req, res) => {
     try {
-        const portal = await Portal.findByIdAndRemove(req.params.id);
+        const portal = await Portal.findByIdAndRemove(req.params.portalId);
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }

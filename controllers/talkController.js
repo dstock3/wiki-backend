@@ -21,7 +21,7 @@ exports.createTalkPage = async (req, res) => {
 
 exports.getTalkPage = async (req, res) => {
   try {
-    const talkPage = await TalkPage.findById(req.params.id).populate('articleId');
+    const talkPage = await TalkPage.findById(req.params.talkPageId).populate('articleId');
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
@@ -33,7 +33,7 @@ exports.getTalkPage = async (req, res) => {
 
 exports.updateTalkPage = async (req, res) => {
   try {
-    const updatedTalkPage = await TalkPage.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedTalkPage = await TalkPage.findByIdAndUpdate(req.params.talkPageId, req.body, { new: true });
     if (!updatedTalkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
@@ -45,7 +45,7 @@ exports.updateTalkPage = async (req, res) => {
 
 exports.deleteTalkPage = async (req, res) => {
   try {
-    const talkPage = await TalkPage.findByIdAndDelete(req.params.id);
+    const talkPage = await TalkPage.findByIdAndDelete(req.params.talkPageId);
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
