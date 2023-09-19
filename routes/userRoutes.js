@@ -4,9 +4,9 @@ const userController = require('../controllers/userController');
 const { ensureAuthenticated } = require('../middlewares/auth');
 
 router.post('/', userController.createUser);
-router.get('/', ensureAuthenticated, userController.getAllUsers);
-router.get('/:userId', ensureAuthenticated, userController.getUserById);
-router.get('/username/:username', ensureAuthenticated, userController.getUserByUsername);
+router.get('/', userController.getAllUsers);
+router.get('/:userId', userController.getUserById);
+router.get('/username/:username', userController.getUserByUsername);
 router.put('/:userId', ensureAuthenticated, userController.updateUser);
 router.delete('/:userId', ensureAuthenticated, userController.deleteUser);
 
