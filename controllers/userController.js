@@ -18,6 +18,18 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.loginUser = async (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.status(400).json({ error: info.message });
+    
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.status(200).json({ message: 'Logged in successfully' });
+    });
+  })(req, res, next);
+};
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
