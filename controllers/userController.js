@@ -1,4 +1,5 @@
 const User = require('../model/user');
+const passport = require('passport');
 const bcrypt = require('bcrypt');
 
 exports.createUser = async (req, res) => {

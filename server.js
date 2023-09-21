@@ -42,7 +42,14 @@ app.use(session({
   }
 }));
 
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:3001',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
 app.use(passport.initialize());
 app.use(passport.session());
 
