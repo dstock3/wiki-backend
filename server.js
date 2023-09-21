@@ -26,6 +26,7 @@ const apiLimiter = rateLimit({
 });
 
 const PORT = 5000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(bodyParser.json());
 app.use(morgan('combined'));
@@ -33,7 +34,12 @@ app.use(morgan('combined'));
 app.use(session({
   secret: SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: true,
+  cookie: { 
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict'
+  }
 }));
 
 app.use(cors());
