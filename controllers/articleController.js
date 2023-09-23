@@ -1,9 +1,21 @@
 const Article = require('../model/article');
+const Portal = require('../model/portal');
 
 exports.createArticle = async (req, res) => {
     try {
-        const article = new Article(req.body);
+        const { portalid, ...articleData } = req.body;
+
+        const article = new Article(articleData);
         await article.save();
+
+        const portal = await Portal.findById(portalid);
+        if (portal) {
+            portal.articles.push(article._id);
+            await portal.save();
+        } else {
+            throw new Error('Portal not found');
+        }
+
         res.status(201).json(article);
     } catch (error) {
         res.status(400).json({ message: error.message });

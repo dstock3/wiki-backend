@@ -33,15 +33,20 @@ exports.createPortal = async (req, res) => {
 
 exports.updatePortal = async (req, res) => {
     try {
-        const updatedPortalData = JSON.parse(req.body.portalData);
-
-        const portal = await Portal.findByIdAndUpdate(req.params.portalId, updatedPortalData, { new: true });
-
-        if (!portal) {
+        const portalExists = await Portal.findById(req.params.portalId);
+        if (!portalExists) {
             return res.status(404).json({ error: 'Portal not found' });
         }
+
+        const updatedPortalData = JSON.parse(req.body.portalData);
+        if(!updatedPortalData) {
+            console.log("Parsing error or empty data:", req.body);
+        }
+        const portal = await Portal.findByIdAndUpdate(req.params.portalId, updatedPortalData, { new: true });
+
         res.status(200).json(portal);
     } catch (err) {
+        console.error("Error:", err.message, err.stack);
         res.status(500).json({ error: err.message });
     }
 };
