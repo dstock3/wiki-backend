@@ -33,7 +33,10 @@ exports.createPortal = async (req, res) => {
 
 exports.updatePortal = async (req, res) => {
     try {
-        const portal = await Portal.findByIdAndUpdate(req.params.portalId, req.body, { new: true });
+        const updatedPortalData = JSON.parse(req.body.portalData);
+
+        const portal = await Portal.findByIdAndUpdate(req.params.portalId, updatedPortalData, { new: true });
+
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
