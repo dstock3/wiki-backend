@@ -7,6 +7,6 @@ router.get('/', portalController.getAllPortals);
 router.get('/:portalId', portalController.getPortalById);
 router.post('/', ensureAuthenticated, portalController.createPortal);
 router.put('/:portalId', ensureAuthenticated, portalController.updatePortal);
-router.delete('/:portalId', ensureAuthenticated, portalController.deletePortal);
+router.delete('/:portalId', portalController.deletePortal);
 
 module.exports = router;
