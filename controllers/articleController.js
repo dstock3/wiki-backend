@@ -5,8 +5,6 @@ const util = require('util');
 exports.createArticle = async (req, res) => {
     try {
         const { portalid, ...articleData } = req.body;
-        console.log("Received article data:", articleData);
-        console.log(util.inspect(articleData, { depth: null, colors: true }));
 
         const article = new Article(articleData);
         const validationError = article.validateSync();
@@ -53,7 +51,17 @@ exports.getArticleById = async (req, res) => {
 
 exports.updateArticle = async (req, res) => {
     try {
-        const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
+        const { portalid, ...articleData } = req.body;
+        const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
+        
+        const portal = await Portal.findById(portalid);
+        if (portal) {
+            portal.articles.push(article._id);
+            await portal.save();
+        } else {
+            throw new Error('Portal not found');
+        }
+        
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
