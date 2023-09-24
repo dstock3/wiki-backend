@@ -1,5 +1,6 @@
 const Article = require('../model/article');
 const Portal = require('../model/portal');
+const TalkPage = require('../model/talk');
 const util = require('util');
 
 exports.createArticle = async (req, res) => {
@@ -20,6 +21,12 @@ exports.createArticle = async (req, res) => {
         } else {
             throw new Error('Portal not found');
         }
+
+        const talkPage = {
+            articleId: article._id,
+            discussions: []
+        };
+        await TalkPage.create(talkPage);
 
         res.status(201).json(article);
     } catch (error) {
