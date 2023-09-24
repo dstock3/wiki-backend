@@ -1,11 +1,18 @@
 const Article = require('../model/article');
 const Portal = require('../model/portal');
+const util = require('util');
 
 exports.createArticle = async (req, res) => {
     try {
         const { portalid, ...articleData } = req.body;
+        console.log("Received article data:", articleData);
+        console.log(util.inspect(articleData, { depth: null, colors: true }));
 
         const article = new Article(articleData);
+        const validationError = article.validateSync();
+        if (validationError) {
+            throw validationError;
+        }
         await article.save();
 
         const portal = await Portal.findById(portalid);
@@ -18,6 +25,7 @@ exports.createArticle = async (req, res) => {
 
         res.status(201).json(article);
     } catch (error) {
+        console.error("Error creating article:", error);
         res.status(400).json({ message: error.message });
     }
 };

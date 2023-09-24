@@ -8,7 +8,7 @@ const InfoSchema = new mongoose.Schema({
     },
     value: {
         type: String,
-        required: true
+        required: false
     },
     header: {
         type: Boolean,
@@ -30,10 +30,7 @@ const ContentSchema = new mongoose.Schema({
         title: String,
         image: {
             alt: String,
-            src: {
-                type: String,
-                required: true
-            }
+            src: String
         },
         info: [InfoSchema]
     }
