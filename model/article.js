@@ -26,14 +26,19 @@ const ContentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    info: {
-        title: String,
-        image: {
-            alt: String,
-            src: String
-        },
-        info: [InfoSchema]
+    image: {
+        alt: String,
+        src: String
     }
+});
+
+const InfoBoxSchema = new mongoose.Schema({
+    title: String,
+    image: {
+        alt: String,
+        src: String
+    },
+    info: [InfoSchema]
 });
 
 // References Schema for the external references/links
@@ -53,7 +58,12 @@ const ArticleSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    intro: {
+        type: String,
+        required: true
+    },
     content: [ContentSchema],
+    infoBox: InfoBoxSchema,
     references: [ReferenceSchema],
     createdAt: {
         type: Date,
