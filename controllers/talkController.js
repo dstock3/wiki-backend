@@ -21,7 +21,8 @@ exports.createTalkPage = async (req, res) => {
 
 exports.getTalkPage = async (req, res) => {
   try {
-    const talkPage = await TalkPage.findById(req.params.talkPageId).populate('articleId');
+    //find the talkpage by articleId
+    const talkPage = await TalkPage.findOne({ articleId: req.params.articleId });
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
