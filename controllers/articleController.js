@@ -92,17 +92,34 @@ exports.deleteArticle = async (req, res) => {
 
 exports.searchArticles = async (req, res) => {
     try {
-      const query = req.query.query;
-  
-      const articles = await Article.find({
-        $text: {
-          $search: query
-        }
-      });
-  
-      res.status(200).json(articles);
+        const query = req.query.query;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10; 
+
+        const skip = (page - 1) * limit;
+
+        const totalArticles = await Article.countDocuments({
+            $text: {
+                $search: query
+            }
+        });
+
+        const articles = await Article.find({
+            $text: {
+                $search: query
+            }
+        }).skip(skip).limit(limit);
+
+        const totalPages = Math.ceil(totalArticles / limit);
+
+        res.status(200).json({
+            articles: articles,
+            total: totalArticles,
+            currentPage: page,
+            totalPages: totalPages
+        });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
-  };
+};
   
