@@ -119,7 +119,8 @@ exports.searchArticles = async (req, res) => {
             totalPages: totalPages
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error during search operation:", error);
+        res.status(500).send(error.message);
     }
 };
   
