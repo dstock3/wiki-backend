@@ -8,7 +8,7 @@ const initializePassport = require('./passport-config');
 const morgan = require('morgan');
 const logger = require('./logger');
 require('dotenv').config();
-
+const csurf = require('csurf');
 const articleRoutes = require('./routes/articleRoutes');
 const portalRoutes = require('./routes/portalRoutes');
 const talkRoutes = require('./routes/talkRoutes');
@@ -42,6 +42,7 @@ app.use(session({
     sameSite: 'strict'
   }
 }));
+app.use(csurf());
 
 const corsOptions = {
   origin: 'http://localhost:3001',
