@@ -1,7 +1,6 @@
 const Article = require('../model/article');
 const Portal = require('../model/portal');
 const TalkPage = require('../model/talk');
-const util = require('util');
 
 exports.createArticle = async (req, res) => {
     try {

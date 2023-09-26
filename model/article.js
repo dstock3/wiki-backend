@@ -83,6 +83,7 @@ const ArticleSchema = new mongoose.Schema({
 
 ArticleSchema.index({
     'title': 'text',
+    'intro': 'text',
     'content.title': 'text',
     'content.text': 'text'
 });
