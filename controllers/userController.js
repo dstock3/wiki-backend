@@ -1,8 +1,13 @@
 const User = require('../model/user');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
+const { validationResult } = require('express-validator');
 
 exports.createUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -64,6 +69,10 @@ exports.getUserByUsername = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
     res.status(200).json(updatedUser);

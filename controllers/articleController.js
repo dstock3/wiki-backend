@@ -1,8 +1,13 @@
 const Article = require('../model/article');
 const Portal = require('../model/portal');
 const TalkPage = require('../model/talk');
+const { validationResult } = require('express-validator');
 
 exports.createArticle = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { portalid, ...articleData } = req.body;
 
@@ -56,6 +61,10 @@ exports.getArticleById = async (req, res) => {
 };
 
 exports.updateArticle = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { portalid, ...articleData } = req.body;
         const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });

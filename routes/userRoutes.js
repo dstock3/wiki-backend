@@ -4,6 +4,7 @@ const userController = require('../controllers/userController');
 const { ensureAuthenticated } = require('../middlewares/auth');
 const csurf = require('csurf');
 const csrfProtection = csurf({ cookie: true });
+const { userValidationRules } = require('../validators/userValidator');
 
 router.get('/get-csrf-token', csrfProtection, (req, res) => {
     try {
@@ -15,12 +16,12 @@ router.get('/get-csrf-token', csrfProtection, (req, res) => {
     }
 });
 
-router.post('/', userController.createUser);
+router.post('/', ...userValidationRules, userController.createUser);
 router.get('/', userController.getAllUsers);
 router.post('/login', userController.loginUser);
 router.get('/:userId', userController.getUserById);
 router.get('/username/:username', userController.getUserByUsername);
-router.put('/:userId', ensureAuthenticated, csrfProtection, userController.updateUser);
+router.put('/:userId', ensureAuthenticated, csrfProtection, ...userValidationRules, userController.updateUser);
 router.delete('/:userId', ensureAuthenticated, csrfProtection, userController.deleteUser);
 
 router.post('/:userId/contributions', ensureAuthenticated, csrfProtection, userController.addContribution);
