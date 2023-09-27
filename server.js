@@ -8,6 +8,8 @@ const initializePassport = require('./passport-config');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const logger = require('./logger');
+const setupHelmet = require('./helmetConfig');
+const mongoSanitize = require('express-mongo-sanitize');
 require('dotenv').config();
 const articleRoutes = require('./routes/articleRoutes');
 const portalRoutes = require('./routes/portalRoutes');
@@ -55,6 +57,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 initializePassport(passport);
+setupHelmet(app);
+app.use(mongoSanitize());
 
 app.use('/articles', apiLimiter, articleRoutes);
 app.use('/portals', apiLimiter, portalRoutes);
