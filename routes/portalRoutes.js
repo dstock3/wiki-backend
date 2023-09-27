@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const portalController = require('../controllers/portalController');
 const { ensureAuthenticated } = require('../middlewares/auth');
+const csurf = require('csurf');
+const csrfProtection = csurf({ cookie: true });
 
 router.get('/', portalController.getAllPortals);
 router.get('/:portalId', portalController.getPortalById);
-router.post('/', ensureAuthenticated, portalController.createPortal);
-router.put('/:portalId', ensureAuthenticated, portalController.updatePortal);
-router.delete('/:portalId', ensureAuthenticated, portalController.deletePortal);
+router.post('/', ensureAuthenticated, csrfProtection, portalController.createPortal);
+router.put('/:portalId', ensureAuthenticated, csrfProtection, portalController.updatePortal);
+router.delete('/:portalId', ensureAuthenticated, csrfProtection, portalController.deletePortal);
 
 module.exports = router;

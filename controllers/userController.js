@@ -27,12 +27,12 @@ exports.loginUser = async (req, res, next) => {
     req.logIn(user, (err) => {
       if (err) return next(err);
       return res.status(200).json({
-        message: 'Logged in successfully',
-        csrfToken: req.csrfToken() 
+        message: 'Logged in successfully'
       });
     });
   })(req, res, next);
 };
+
 
 exports.getAllUsers = async (req, res) => {
   try {

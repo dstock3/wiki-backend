@@ -5,10 +5,10 @@ const session = require('express-session');
 const cors = require('cors');
 const passport = require('passport');
 const initializePassport = require('./passport-config');
+const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const logger = require('./logger');
 require('dotenv').config();
-const csurf = require('csurf');
 const articleRoutes = require('./routes/articleRoutes');
 const portalRoutes = require('./routes/portalRoutes');
 const talkRoutes = require('./routes/talkRoutes');
@@ -31,7 +31,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(bodyParser.json());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
-
+app.use(cookieParser());
 app.use(session({
   secret: SECRET,
   resave: false,
@@ -42,7 +42,6 @@ app.use(session({
     sameSite: 'strict'
   }
 }));
-app.use(csurf());
 
 const corsOptions = {
   origin: 'http://localhost:3001',
