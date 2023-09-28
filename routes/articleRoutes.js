@@ -9,6 +9,7 @@ const { articleValidationRules } = require('../validators/articleValidator');
 router.get('/', articleController.getAllArticles);
 router.get('/search', articleController.searchArticles);
 router.get('/:articleId', articleController.getArticleById);
+router.get('/:articleId/:sectionId', articleController.getSection);
 router.post('/', ensureAuthenticated, csrfProtection, ...articleValidationRules, articleController.createArticle);
 router.put('/:articleId', ensureAuthenticated, csrfProtection, ...articleValidationRules, articleController.updateArticle);
 router.delete('/:articleId', ensureAuthenticated, csrfProtection, articleController.deleteArticle);

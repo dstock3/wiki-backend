@@ -131,4 +131,21 @@ exports.searchArticles = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
+
+exports.getSection = async (req, res) => {
+    try {
+        const article = await Article.findById(req.params.articleId);
+        if (!article) {
+            return res.status(404).json({ message: 'Article not found' });
+        }
+        const section = article.content.id(req.params.sectionId);
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+        res.json(section);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
   
