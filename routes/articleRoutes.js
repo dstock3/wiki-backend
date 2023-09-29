@@ -14,5 +14,6 @@ router.post('/', ensureAuthenticated, csrfProtection, ...articleValidationRules,
 router.put('/:articleId', ensureAuthenticated, csrfProtection, ...articleValidationRules, articleController.updateArticle);
 router.delete('/:articleId', ensureAuthenticated, csrfProtection, articleController.deleteArticle);
 router.put('/:articleId/:sectionId', ensureAuthenticated, csrfProtection, articleController.updateSection);
+router.delete('/:articleId/:sectionId', ensureAuthenticated, csrfProtection, articleController.deleteSection);
 
 module.exports = router;

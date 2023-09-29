@@ -170,4 +170,22 @@ exports.updateSection = async (req, res) => {
     }
 }
 
+exports.deleteSection = async (req, res) => {
+    try {
+        const article = await Article.findById(req.params.articleId);
+        if (!article) {
+            return res.status(404).json({ message: 'Article not found' });
+        }
+        const section = article.content.id(req.params.sectionId);
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+        section.remove();
+        await article.save();
+        res.json({ message: 'Section deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
   
