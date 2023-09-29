@@ -148,4 +148,26 @@ exports.getSection = async (req, res) => {
     }
 }
 
+exports.updateSection = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const article = await Article.findById(req.params.articleId);
+        if (!article) {
+            return res.status(404).json({ message: 'Article not found' });
+        }
+        const section = article.content.id(req.params.sectionId);
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+        section.set(req.body);
+        await article.save();
+        res.json(section);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
   
