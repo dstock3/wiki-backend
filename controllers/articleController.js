@@ -61,13 +61,11 @@ exports.getArticleById = async (req, res) => {
 };
 
 exports.updateArticle = async (req, res) => {
-    /* payload is failing some validation checks. need to troubleshoot. 
-    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
         return res.status(400).json({ errors: errors.array() });
-    }*/
+    }
     try {
         const { portalid, ...articleData } = req.body;
         const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
@@ -85,6 +83,7 @@ exports.updateArticle = async (req, res) => {
         }
         res.json(article);
     } catch (error) {
+        console.error("Error in updateArticle:", error);
         res.status(400).json({ message: error.message });
     }
 };
