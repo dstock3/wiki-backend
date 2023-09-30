@@ -23,10 +23,12 @@ exports.getPortalById = async (req, res) => {
 };
 
 exports.createPortal = async (req, res) => {
+    /*
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
-    }
+    }*/
+    console.log(req.body)
     try {
         const portal = new Portal(req.body);
         await portal.save();
