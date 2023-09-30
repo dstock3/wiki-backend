@@ -34,6 +34,16 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use(bodyParser.json());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 app.use(cookieParser());
+
+const corsOptions = {
+  origin: 'http://localhost:3001',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
 app.use(session({
   secret: SECRET,
   resave: false,
@@ -45,14 +55,6 @@ app.use(session({
   }
 }));
 
-const corsOptions = {
-  origin: 'http://localhost:3001',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
 app.use(passport.initialize());
 app.use(passport.session());
 
