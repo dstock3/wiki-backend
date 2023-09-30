@@ -23,14 +23,16 @@ exports.getPortalById = async (req, res) => {
 };
 
 exports.createPortal = async (req, res) => {
-    /*
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
-    }*/
-    console.log(req.body)
+    }
     try {
-        const portal = new Portal(req.body);
+        const portalData = JSON.parse(req.body.portalData);
+        if (req.file) {
+            portalData.portalImage.src = req.file.path;
+        }
+        const portal = new Portal(portalData);
         await portal.save();
         res.status(201).json(portal);
     } catch (err) {
@@ -43,16 +45,24 @@ exports.updatePortal = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
+
     try {
         const portalExists = await Portal.findById(req.params.portalId);
         if (!portalExists) {
             return res.status(404).json({ error: 'Portal not found' });
         }
 
-        const updatedPortalData = JSON.parse(req.body.portalData);
-        if(!updatedPortalData) {
+        if (!req.body.portalData) {
             console.log("Parsing error or empty data:", req.body);
+            return res.status(400).json({ error: 'Invalid portal data' });
         }
+
+        const updatedPortalData = JSON.parse(req.body.portalData);
+
+        if (req.file) {
+            updatedPortalData.portalImage.src = req.file.path;
+        }
+
         const portal = await Portal.findByIdAndUpdate(req.params.portalId, updatedPortalData, { new: true });
 
         res.status(200).json(portal);
