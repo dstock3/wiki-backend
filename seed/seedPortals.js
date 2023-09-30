@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Portal = require('../model/portal');
-const Article = require('../model/article')
+const Article = require('../model/article');
+const User = require('../model/user');
 
 mongoose.connect('mongodb://localhost:27017/wiki_db', {
   useNewUrlParser: true,
@@ -16,6 +17,12 @@ const seedPortals = async () => {
             return;
         }
 
+        const user = await User.findOne();
+        if (!user) {
+            console.log('No users found in the database. Please seed users first.');
+            return;
+        }
+
         const portalData = {
             portalTitle: 'Sample Portal Title',
             portalDescription: 'This is a sample portal description.',
@@ -25,7 +32,8 @@ const seedPortals = async () => {
             },
             articles: articles.map(article => article._id), 
             featuredArticle: articles[0]._id, 
-            recentUpdates: articles.slice(0, 5).map(article => article._id) 
+            recentUpdates: articles.slice(0, 5).map(article => article._id),
+            owner: user._id
         };
     
         await Portal.create(portalData);

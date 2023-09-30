@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 
 // Comment Schema for storing individual comments
 const CommentSchema = new mongoose.Schema({
+  commentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
   username: {
     type: String,
     required: true
@@ -19,7 +23,7 @@ const CommentSchema = new mongoose.Schema({
 // Topic Schema to store discussion topics which include a list of comments
 const TopicSchema = new mongoose.Schema({
   topicId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   topic: {

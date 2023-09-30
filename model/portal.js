@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Portal Schema to store Portal data
 const PortalSchema = new mongoose.Schema({
   portalTitle: {
     type: String,
@@ -35,7 +34,14 @@ const PortalSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Article'
     }
-  ]
+  ],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Portal', PortalSchema);

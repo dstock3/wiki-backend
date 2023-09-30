@@ -1,46 +1,47 @@
 const { body } = require('express-validator');
 
 const portalValidationRules = [
-    body('name')
-      .trim()
-      .isLength({ min: 3 })
-      .withMessage('Name must be at least 3 characters long')
-      .matches(/^[a-zA-Z\s]+$/)
-      .withMessage('Name can only contain letters and spaces'),
+  body('portalTitle')
+    .trim()
+    .isLength({ min: 3 })
+    .withMessage('Portal title must be at least 3 characters long')
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage('Portal title can only contain letters and spaces'),
 
-    body('description')
-      .trim()
-      .isLength({ min: 10, max: 500 })
-      .withMessage('Description must be between 10 and 500 characters long'),
+  body('portalDescription')
+    .trim()
+    .isLength({ min: 10, max: 500 })
+    .withMessage('Description must be between 10 and 500 characters long'),
 
-    body('articles')
-      .optional()
-      .isArray()
-      .withMessage('Articles must be an array of article IDs'),
+  body('portalImage.src')
+    .trim()
+    .isURL()
+    .withMessage('Image source must be a valid URL'),
 
-    body('owner')
-      .optional()
-      .isString()
-      .trim()
-      .withMessage('Owner must be a valid user ID'),
+  body('portalImage.alt')
+    .optional()
+    .trim()
+    .isString()
+    .withMessage('Image alt text must be a string'),
 
-    body('dateCreated')
-      .optional()
-      .isDate()
-      .withMessage('Invalid date format'),
+  body('articles.*')
+    .optional()
+    .isMongoId()
+    .withMessage('Each article ID must be a valid MongoDB ObjectId'),
 
-    body('url')
-      .optional()
-      .trim()
-      .isURL()
-      .withMessage('URL must be a valid URL'),
+  body('featuredArticle')
+    .optional()
+    .isMongoId()
+    .withMessage('Featured article ID must be a valid MongoDB ObjectId'),
 
-    body('image')
-      .optional()
-      .trim()
-      .isURL()
-      .withMessage('Image must be a valid URL')
+  body('recentUpdates.*')
+    .optional()
+    .isMongoId()
+    .withMessage('Each recent update article ID must be a valid MongoDB ObjectId'),
+
+  body('owner')
+    .isMongoId()
+    .withMessage('Owner ID must be a valid MongoDB ObjectId'),
 ];
-
 
 module.exports = { portalValidationRules };

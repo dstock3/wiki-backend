@@ -27,23 +27,29 @@ const talkValidationRules = [
       .isDate()
       .withMessage('Invalid date format for discussion'),
 
-    body('discussions.*.replies')
-      .isArray()
-      .withMessage('Replies must be an array for each discussion'),
+    body('discussions.*.topic')
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage('Topic is required for each discussion'),
 
-    body('discussions.*.replies.*.username')
+    body('discussions.*.comments')
+      .isArray()
+      .withMessage('Comments must be an array for each discussion'),
+
+    body('discussions.*.comments.*.username')
       .isString()
       .trim()
       .notEmpty()
       .withMessage('Username is required for each reply'),
 
-    body('discussions.*.replies.*.content')
+    body('discussions.*.comments.*.content')
       .isString()
       .trim()
       .notEmpty()
       .withMessage('Content is required for each reply'),
 
-    body('discussions.*.replies.*.date')
+    body('discussions.*.comments.*.date')
       .isDate()
       .withMessage('Invalid date format for reply')
 ];
