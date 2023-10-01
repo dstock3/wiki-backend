@@ -22,6 +22,18 @@ exports.getPortalById = async (req, res) => {
     }
 };
 
+exports.getArticlesByPortalId = async (req, res) => {
+    try {
+        const portal = await Portal.findById(req.params.portalId).populate('articles');
+        if (!portal) {
+            return res.status(404).json({ message: 'Portal not found' });
+        }
+        res.json(portal.articles);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.createPortal = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
