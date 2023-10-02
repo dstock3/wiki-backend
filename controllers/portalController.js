@@ -37,14 +37,22 @@ exports.getArticlesByPortalId = async (req, res) => {
 exports.createPortal = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.log("Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
+
     try {
-        const portalData = JSON.parse(req.body.portalData);
         if (req.file) {
-            portalData.portalImage.src = req.file.path;
+            req.body.portalImage.src = req.file.path;
         }
-        const portal = new Portal(portalData);
+        const owner = req.user._id;
+
+        const portal = new Portal({
+            portalTitle: req.body.portalTitle,
+            portalDescription: req.body.portalDescription,
+            portalImage: req.body.portalImage,
+            owner: owner
+        });
         await portal.save();
         res.status(201).json(portal);
     } catch (err) {

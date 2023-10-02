@@ -11,8 +11,7 @@ const PortalSchema = new mongoose.Schema({
   },
   portalImage: {
     src: {
-      type: String,
-      required: true
+      type: String
     },
     alt: {
       type: String,

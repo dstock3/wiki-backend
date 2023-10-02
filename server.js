@@ -1,6 +1,5 @@
 const express = require('express');
 const rateLimit = require("express-rate-limit");
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const cors = require('cors');
 const passport = require('passport');
@@ -31,7 +30,9 @@ const apiLimiter = rateLimit({
 const PORT = 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
+
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 app.use(cookieParser());
 

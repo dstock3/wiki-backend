@@ -1,8 +1,9 @@
 const { body } = require('express-validator');
-
+/*
 const portalValidationRules = [
   body('portalTitle')
     .trim()
+    .exists().withMessage('Portal title is required')
     .isLength({ min: 3 })
     .withMessage('Portal title must be at least 3 characters long')
     .matches(/^[a-zA-Z\s]+$/)
@@ -10,10 +11,12 @@ const portalValidationRules = [
 
   body('portalDescription')
     .trim()
+    .exists().withMessage('Portal description is required')
     .isLength({ min: 10, max: 500 })
     .withMessage('Description must be between 10 and 500 characters long'),
 
   body('portalImage.src')
+    .optional()
     .trim()
     .isURL()
     .withMessage('Image source must be a valid URL'),
@@ -39,9 +42,22 @@ const portalValidationRules = [
     .isMongoId()
     .withMessage('Each recent update article ID must be a valid MongoDB ObjectId'),
 
-  body('owner')
-    .isMongoId()
-    .withMessage('Owner ID must be a valid MongoDB ObjectId'),
+];
+
+*/
+
+const portalValidationRules = [
+  body('portalTitle')
+    .trim()
+    .exists().withMessage('Portal title is required')
+    .isLength({ min: 3 })
+    .withMessage('Portal title must be at least 3 characters long'),
+  
+  body('portalDescription')
+    .trim()
+    .exists().withMessage('Portal description is required')
+    .isLength({ min: 10, max: 500 })
+    .withMessage('Description must be between 10 and 500 characters long'),
 ];
 
 module.exports = { portalValidationRules };
