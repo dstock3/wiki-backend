@@ -2,6 +2,7 @@ const User = require('../model/user');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
+NAME = process.env.SESSION_NAME;
 
 exports.createUser = async (req, res) => {
   const errors = validationResult(req);
@@ -32,15 +33,23 @@ exports.loginUser = async (req, res, next) => {
     req.logIn(user, (err) => {
       if (err) return next(err);
       return res.status(200).json({
-        message: 'Logged in successfully'
+        message: 'Logged in successfully',
+        username: user.username
       });
     });
   })(req, res, next);
 };
 
 exports.logoutUser = (req, res) => {
-  req.logout();
-  res.status(200).json({ message: 'Logged out successfully' });
+  req.logout(() => {
+    req.session.destroy(err => {
+      if(err) {
+          return res.status(500).json({ error: 'Error logging out, please try again.' });
+      }
+      res.clearCookie('session-id'); 
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
 };
 
 exports.checkAuthenticationStatus = (req, res) => {

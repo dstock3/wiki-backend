@@ -16,6 +16,7 @@ const talkRoutes = require('./routes/talkRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 SECRET = process.env.SECRET_KEY;
+NAME = process.env.SESSION_NAME;
 
 require('./database.js');
 
@@ -46,6 +47,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(session({
+  name: NAME,
   secret: SECRET,
   resave: false,
   saveUninitialized: true,
