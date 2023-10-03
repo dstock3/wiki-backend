@@ -38,6 +38,21 @@ exports.loginUser = async (req, res, next) => {
   })(req, res, next);
 };
 
+exports.logoutUser = (req, res) => {
+  req.logout();
+  res.status(200).json({ message: 'Logged out successfully' });
+};
+
+exports.checkAuthenticationStatus = (req, res) => {
+  if (req.isAuthenticated()) {
+    res.status(200).json({
+      isAuthenticated: true,
+      username: req.user.username
+    });
+  } else {
+    res.status(200).json({ isAuthenticated: false });
+  }
+};
 
 exports.getAllUsers = async (req, res) => {
   try {

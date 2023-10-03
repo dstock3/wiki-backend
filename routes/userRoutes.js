@@ -19,6 +19,8 @@ router.get('/get-csrf-token', csrfProtection, (req, res) => {
 router.post('/', ...userValidationRules, userController.createUser);
 router.get('/', userController.getAllUsers);
 router.post('/login', userController.loginUser);
+router.post('/logout', userController.logoutUser);
+router.get('/status', userController.checkAuthenticationStatus);
 router.get('/:userId', userController.getUserById);
 router.get('/username/:username', userController.getUserByUsername);
 router.put('/:userId', ensureAuthenticated, csrfProtection, ...userValidationRules, userController.updateUser);
