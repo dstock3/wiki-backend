@@ -46,7 +46,7 @@ exports.logoutUser = (req, res) => {
       if(err) {
           return res.status(500).json({ error: 'Error logging out, please try again.' });
       }
-      res.clearCookie('session-id'); 
+      res.clearCookie(NAME); 
       res.json({ message: 'Logged out successfully' });
     });
   });
