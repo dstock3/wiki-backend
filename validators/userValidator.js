@@ -15,6 +15,7 @@ const userValidationRules = [
       .normalizeEmail(),
 
     body('password')
+      .if((value, { req }) => req.body.password && req.body.password.length > 0)
       .isLength({ min: 8 })
       .withMessage('Password must be at least 8 characters long')
       .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/)
@@ -26,5 +27,4 @@ const userValidationRules = [
       .withMessage('Invalid date format')
 ];
 
-
-module.exports = {userValidationRules};
+module.exports = { userValidationRules };
