@@ -95,10 +95,10 @@ exports.getUserByUsername = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ errors: errors.array() });
   }
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
     res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ error: error.message });
