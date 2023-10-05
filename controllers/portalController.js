@@ -38,6 +38,7 @@ exports.getArticlesByPortalId = async (req, res) => {
         if (!portal) {
             return res.status(404).json({ message: 'Portal not found' });
         }
+        res.json(portal.articles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

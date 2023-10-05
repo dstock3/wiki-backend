@@ -8,8 +8,8 @@ const upload = require('../middlewares/multer');
 const { portalValidationRules } = require('../validators/portalValidator');
 
 router.get('/', portalController.getAllPortals);
-router.get('/:portalId', portalController.getPortalById);
 router.get('/:portalId/articles', portalController.getArticlesByPortalId);
+router.get('/:portalId', portalController.getPortalById);
 router.post('/', ensureAuthenticated, csrfProtection, upload.single('image'), ...portalValidationRules, portalController.createPortal);
 router.put('/:portalId', ensureAuthenticated, csrfProtection, upload.single('image'), ...portalValidationRules, portalController.updatePortal);
 router.delete('/:portalId', ensureAuthenticated, csrfProtection, portalController.deletePortal);
