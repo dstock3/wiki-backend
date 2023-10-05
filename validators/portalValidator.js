@@ -56,8 +56,8 @@ const portalValidationRules = [
   body('portalDescription')
     .trim()
     .exists().withMessage('Portal description is required')
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Description must be between 10 and 500 characters long'),
+    .isLength({ min: 10, max: 1500 })
+    .withMessage('Description must be between 10 and 1500 characters long'),
 ];
 
 module.exports = { portalValidationRules };
