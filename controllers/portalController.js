@@ -16,9 +16,16 @@ exports.getPortalById = async (req, res) => {
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
-        //pick a random article from the portal to be the featured article
+
         const featuredArticle = portal.articles[Math.floor(Math.random() * portal.articles.length)];
         portal.featuredArticle = featuredArticle;
+
+        const recentUpdates = portal.articles.sort((a, b) => {
+            return b.datePublished - a.datePublished;
+        }
+        ).slice(0, 3);
+        portal.recentUpdates = recentUpdates;
+
         res.status(200).json(portal);
     } catch (err) {
         res.status(500).json({ error: err.message });
