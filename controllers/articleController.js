@@ -11,6 +11,10 @@ exports.createArticle = async (req, res) => {
     try {
         const { portalid, ...articleData } = req.body;
 
+        if (req.file) {
+            articleData.infobox.image.src = req.file.path;
+        }
+
         const article = new Article(articleData);
         const validationError = article.validateSync();
         if (validationError) {
@@ -68,8 +72,11 @@ exports.updateArticle = async (req, res) => {
     }
     try {
         const { portalid, ...articleData } = req.body;
+        if (req.file) {
+            articleData.infobox.image.src = req.file.path;
+        }
         const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
-        
+
         const portal = await Portal.findById(portalid);
         if (portal) {
             portal.articles.push(article._id);
