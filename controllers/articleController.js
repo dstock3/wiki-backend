@@ -77,14 +77,6 @@ exports.updateArticle = async (req, res) => {
         }
         const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
 
-        const portal = await Portal.findById(portalid);
-        if (portal) {
-            portal.articles.push(article._id);
-            await portal.save();
-        } else {
-            throw new Error('Portal not found');
-        }
-        
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
