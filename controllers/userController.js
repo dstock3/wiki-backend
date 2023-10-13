@@ -29,7 +29,7 @@ exports.loginUser = async (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) return res.status(400).json({ error: info.message });
-    
+
     req.logIn(user, (err) => {
       if (err) return next(err);
       return res.status(200).json({
@@ -76,10 +76,7 @@ exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const isOwnProfile = req.session.userId === req.params.userId;
-
-    res.status(200).json({ user, isOwnProfile });
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -90,7 +87,7 @@ exports.getUserByUsername = async (req, res) => {
     const user = await User.findOne({ username: req.params.username }, '-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const isOwnProfile = req.session.userId === req.params.userId;
+    const isOwnProfile = req.user && req.user.username === req.params.username;
 
     res.status(200).json({ user, isOwnProfile });
   } catch (error) {
