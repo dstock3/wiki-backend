@@ -1,4 +1,5 @@
-const User = require('../model/user');
+const User = require('../model/user').User;
+const MailingList = require('../model/user').MailingList;
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
@@ -19,8 +20,21 @@ exports.createUser = async (req, res) => {
     });
 
     await user.save();
+
+    const mailingEntry = new MailingList({
+      email: req.body.email
+    });
+    await mailingEntry.save();
+
+    const allSubscribers = await MailingList.find({});
+    console.log("Mailing List:", allSubscribers.map(subscriber => subscriber.email));
+
     res.status(201).json({ message: 'User created successfully', user });
   } catch (error) {
+
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      return res.status(400).json({ error: 'Email already exists in the mailing list.' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -105,6 +119,9 @@ exports.updateUser = async (req, res) => {
       return res.status(403).json({ error: 'You are not authorized to perform this action' });
     }
 
+    const oldUserData = await User.findById(req.params.userId);
+    const oldEmail = oldUserData.email;
+
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -112,8 +129,18 @@ exports.updateUser = async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
+
+    if (oldEmail !== req.body.email) {
+      await MailingList.findOneAndUpdate({ email: oldEmail }, { email: req.body.email });
+    }
+    const allSubscribers = await MailingList.find({});
+    console.log("Mailing List:", allSubscribers.map(subscriber => subscriber.email));
+
     res.status(200).json(updatedUser);
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      return res.status(400).json({ error: 'Updated email already exists in the mailing list.' });
+    }
     res.status(500).json({ error: error.message });
   }
 };

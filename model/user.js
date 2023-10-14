@@ -39,4 +39,15 @@ const UserSchema = new mongoose.Schema({
   contributions: [ContributionSchema]
 });
 
-module.exports = mongoose.model('User', UserSchema);
+const MailingListSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    unique: true,
+    required: true
+  }
+});
+
+module.exports = {
+  User: mongoose.model('User', UserSchema),
+  MailingList: mongoose.model('MailingList', MailingListSchema),
+};
