@@ -31,11 +31,12 @@ exports.createArticle = async (req, res) => {
             throw new Error('Portal not found');
         }
 
-        const talkPage = {
+        const talkPage = new TalkPage({
             articleId: article._id,
             discussions: []
-        };
-        await TalkPage.create(talkPage);
+        });
+
+        article.talk = talkPage._id;
 
         res.status(201).json(article);
     } catch (error) {

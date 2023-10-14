@@ -75,6 +75,10 @@ const ArticleSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    talk: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TalkPage'
+    },
     status: {
         type: String,
         enum: ['draft', 'published', 'archived'],

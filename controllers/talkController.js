@@ -1,4 +1,5 @@
 const TalkPage = require('../model/talk');
+const Article = require('../model/article');
 const { validationResult } = require('express-validator');
 
 exports.listAllTalkPages = async (req, res) => {
@@ -66,21 +67,32 @@ exports.deleteTalkPage = async (req, res) => {
 };
 
 exports.createTopic = async (req, res) => {
+  /*
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
-  }
+  }*/
 
-  const talkPageId = req.params.talkPageId;
+  const articleId = req.params.articleId;
   const { topicId, topic } = req.body;
 
   try {
-      const talkPage = await TalkPage.findById(talkPageId);
+      const article = await Article.findById(articleId);
+      if (!article) {
+          return res.status(404).json({ error: 'Article not found' });
+      }
+
+      const talkPage = await TalkPage.findById(article.talk);
+      if (!talkPage) {
+          return res.status(404).json({ error: 'TalkPage not found for this article' });
+      }
+
       talkPage.discussions.push({ topicId, topic });
       await talkPage.save();
 
       res.status(201).json({ message: "Topic created successfully!" });
   } catch (error) {
+      console.log(error)
       res.status(500).json({ error: error.message });
   }
 };
