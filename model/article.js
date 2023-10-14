@@ -72,7 +72,8 @@ const ArticleSchema = new mongoose.Schema({
     updatedAt: Date,
     author: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
     },
     status: {
         type: String,

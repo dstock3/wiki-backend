@@ -20,6 +20,7 @@ exports.createArticle = async (req, res) => {
         if (validationError) {
             throw validationError;
         }
+        article.author = req.user._id;
         await article.save();
 
         const portal = await Portal.findById(portalid);
@@ -54,11 +55,13 @@ exports.getAllArticles = async (req, res) => {
 
 exports.getArticleById = async (req, res) => {
     try {
+        
         const article = await Article.findById(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
-        res.json(article);
+        const isAuthor = req.user ? req.user._id.equals(article.author) : false;
+        res.status(200).json({ article, isAuthor });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -75,6 +78,7 @@ exports.updateArticle = async (req, res) => {
         if (req.file) {
             articleData.infobox.image.src = req.file.path;
         }
+        articleData.author = req.user._id;
         const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
 
         if (!article) {
