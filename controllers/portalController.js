@@ -22,11 +22,13 @@ exports.getPortalById = async (req, res) => {
 
         const recentUpdates = portal.articles.sort((a, b) => {
             return b.datePublished - a.datePublished;
-        }
-        ).slice(0, 3);
+        }).slice(0, 3);
         portal.recentUpdates = recentUpdates;
 
-        res.status(200).json(portal);
+        const isViewerOwner = req.user && portal.owner.equals(req.user._id);
+        portal.isViewerOwner = isViewerOwner;
+
+        res.status(200).json({ portal, isViewerOwner });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -26,9 +26,6 @@ exports.createUser = async (req, res) => {
     });
     await mailingEntry.save();
 
-    const allSubscribers = await MailingList.find({});
-    console.log("Mailing List:", allSubscribers.map(subscriber => subscriber.email));
-
     res.status(201).json({ message: 'User created successfully', user });
   } catch (error) {
 
@@ -133,8 +130,6 @@ exports.updateUser = async (req, res) => {
     if (oldEmail !== req.body.email) {
       await MailingList.findOneAndUpdate({ email: oldEmail }, { email: req.body.email });
     }
-    const allSubscribers = await MailingList.find({});
-    console.log("Mailing List:", allSubscribers.map(subscriber => subscriber.email));
 
     res.status(200).json(updatedUser);
   } catch (error) {
