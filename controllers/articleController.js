@@ -12,21 +12,9 @@ exports.createArticle = async (req, res) => {
     }
     req.body.references = JSON.parse(req.body.references);
 
-    console.log("Request Body:", req.body);
-    console.log("InfoBox Info:", JSON.stringify(req.body.infoBox.info, null, 2));
-    console.log("Uploaded File:", req.file);
-    /*
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }*/
     try {
         const article = new Article(req.body);
-        /*
-        const validationError = article.validateSync();
-        if (validationError) {
-            throw validationError;
-        }*/
+
         article.author = req.user._id;
         await article.save();
 
@@ -76,18 +64,15 @@ exports.getArticleById = async (req, res) => {
 };
 
 exports.updateArticle = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        console.log(errors);
-        return res.status(400).json({ errors: errors.array() });
+    req.body.content = JSON.parse(req.body.content);
+    req.body.infoBox = JSON.parse(req.body.infoBox);
+    if (req.file && req.body.infoBox && req.body.infoBox.image) {
+        req.body.infoBox.image.src = req.file.path;
     }
+    req.body.references = JSON.parse(req.body.references);
+
     try {
-        const { portalid, ...articleData } = req.body;
-        if (req.file) {
-            articleData.infobox.image.src = req.file.path;
-        }
-        articleData.author = req.user._id;
-        const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
+        const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
 
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
