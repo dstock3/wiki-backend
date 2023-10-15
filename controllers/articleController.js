@@ -4,22 +4,29 @@ const TalkPage = require('../model/talk');
 const { validationResult } = require('express-validator');
 
 exports.createArticle = async (req, res) => {
+    const portalid = req.body.portalid;
+    req.body.content = JSON.parse(req.body.content);
+    req.body.infoBox = JSON.parse(req.body.infoBox);
+    if (req.file && req.body.infoBox && req.body.infoBox.image) {
+        req.body.infoBox.image.src = req.file.path;
+    }
+    req.body.references = JSON.parse(req.body.references);
+
+    console.log("Request Body:", req.body);
+    console.log("InfoBox Info:", JSON.stringify(req.body.infoBox.info, null, 2));
+    console.log("Uploaded File:", req.file);
+    /*
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
-    }
+    }*/
     try {
-        const { portalid, ...articleData } = req.body;
-
-        if (req.file) {
-            articleData.infobox.image.src = req.file.path;
-        }
-
-        const article = new Article(articleData);
+        const article = new Article(req.body);
+        /*
         const validationError = article.validateSync();
         if (validationError) {
             throw validationError;
-        }
+        }*/
         article.author = req.user._id;
         await article.save();
 
@@ -40,7 +47,7 @@ exports.createArticle = async (req, res) => {
 
         res.status(201).json(article);
     } catch (error) {
-        console.error("Error creating article:", error);
+        console.error("Error Stack Trace:", error.stack);
         res.status(400).json({ message: error.message });
     }
 };
