@@ -7,15 +7,21 @@ exports.createArticle = async (req, res) => {
     const portalid = req.body.portalid;
     req.body.content = JSON.parse(req.body.content);
     req.body.infoBox = JSON.parse(req.body.infoBox);
-    if (req.file && req.body.infoBox && req.body.infoBox.image) {
-        req.body.infoBox.image.src = req.file.path;
-    }
     req.body.references = JSON.parse(req.body.references);
 
     try {
         const article = new Article(req.body);
 
         article.author = req.user._id;
+        
+        const talkPage = new TalkPage({
+            articleId: article._id,
+            discussions: []
+        });
+        await talkPage.save();
+
+        article.talk = talkPage._id;
+        
         await article.save();
 
         const portal = await Portal.findById(portalid);
@@ -25,13 +31,6 @@ exports.createArticle = async (req, res) => {
         } else {
             throw new Error('Portal not found');
         }
-
-        const talkPage = new TalkPage({
-            articleId: article._id,
-            discussions: []
-        });
-
-        article.talk = talkPage._id;
 
         res.status(201).json(article);
     } catch (error) {
@@ -66,9 +65,6 @@ exports.getArticleById = async (req, res) => {
 exports.updateArticle = async (req, res) => {
     req.body.content = JSON.parse(req.body.content);
     req.body.infoBox = JSON.parse(req.body.infoBox);
-    if (req.file && req.body.infoBox && req.body.infoBox.image) {
-        req.body.infoBox.image.src = req.file.path;
-    }
     req.body.references = JSON.parse(req.body.references);
 
     try {
