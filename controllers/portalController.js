@@ -1,4 +1,5 @@
 const Portal = require('../model/portal');
+const Article = require('../model/article');
 const { validationResult } = require('express-validator');
 
 exports.getAllPortals = async (req, res) => {
@@ -109,9 +110,9 @@ exports.deletePortal = async (req, res) => {
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
-
+        
         await Article.deleteMany({ _id: { $in: portal.articles } });
-        await portal.remove();
+        await Portal.deleteOne({ _id: req.params.portalId });
 
         res.status(200).json({ message: 'Portal and its associated articles deleted successfully' });
     } catch (err) {
