@@ -88,8 +88,14 @@ exports.updatePortal = async (req, res) => {
 
     try {
         const portalExists = await Portal.findById(req.params.portalId);
+
         if (!portalExists) {
             return res.status(404).json({ error: 'Portal not found' });
+        }
+
+        const isViewerOwner = req.user && portalExists.owner.equals(req.user._id);
+        if (!isViewerOwner) {
+            return res.status(403).json({ error: 'You do not have permission to update this portal' });
         }
 
         const updatedPortalData = {
