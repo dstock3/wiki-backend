@@ -22,11 +22,13 @@ exports.getPortalById = async (req, res) => {
 
         const recentUpdates = portal.articles.sort((a, b) => {
             return b.datePublished - a.datePublished;
-        }
-        ).slice(0, 3);
+        }).slice(0, 3);
         portal.recentUpdates = recentUpdates;
 
-        res.status(200).json(portal);
+        const isViewerOwner = req.user && portal.owner.equals(req.user._id);
+        portal.isViewerOwner = isViewerOwner;
+
+        res.status(200).json({ portal, isViewerOwner });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -82,12 +84,11 @@ exports.updatePortal = async (req, res) => {
             return res.status(404).json({ error: 'Portal not found' });
         }
 
-        if (!req.body.portalData) {
-            console.log("Parsing error or empty data:", req.body);
-            return res.status(400).json({ error: 'Invalid portal data' });
-        }
-
-        const updatedPortalData = JSON.parse(req.body.portalData);
+        const updatedPortalData = {
+            portalTitle: req.body.portalTitle,
+            portalDescription: req.body.portalDescription,
+            portalImage: req.body.portalImage
+        };
 
         if (req.file) {
             updatedPortalData.portalImage.src = req.file.path;

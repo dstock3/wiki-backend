@@ -4,22 +4,24 @@ const TalkPage = require('../model/talk');
 const { validationResult } = require('express-validator');
 
 exports.createArticle = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+    const portalid = req.body.portalid;
+    req.body.content = JSON.parse(req.body.content);
+    req.body.infoBox = JSON.parse(req.body.infoBox);
+    req.body.references = JSON.parse(req.body.references);
+
     try {
-        const { portalid, ...articleData } = req.body;
+        const article = new Article(req.body);
 
-        if (req.file) {
-            articleData.infobox.image.src = req.file.path;
-        }
+        article.author = req.user._id;
+        
+        const talkPage = new TalkPage({
+            articleId: article._id,
+            discussions: []
+        });
+        await talkPage.save();
 
-        const article = new Article(articleData);
-        const validationError = article.validateSync();
-        if (validationError) {
-            throw validationError;
-        }
+        article.talk = talkPage._id;
+        
         await article.save();
 
         const portal = await Portal.findById(portalid);
@@ -30,15 +32,9 @@ exports.createArticle = async (req, res) => {
             throw new Error('Portal not found');
         }
 
-        const talkPage = {
-            articleId: article._id,
-            discussions: []
-        };
-        await TalkPage.create(talkPage);
-
         res.status(201).json(article);
     } catch (error) {
-        console.error("Error creating article:", error);
+        console.error("Error Stack Trace:", error.stack);
         res.status(400).json({ message: error.message });
     }
 };
@@ -54,37 +50,26 @@ exports.getAllArticles = async (req, res) => {
 
 exports.getArticleById = async (req, res) => {
     try {
+        
         const article = await Article.findById(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
-        res.json(article);
+        const isAuthor = req.user ? req.user._id.equals(article.author) : false;
+        res.status(200).json({ article, isAuthor });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 exports.updateArticle = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        console.log(errors);
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const { portalid, ...articleData } = req.body;
-        if (req.file) {
-            articleData.infobox.image.src = req.file.path;
-        }
-        const article = await Article.findByIdAndUpdate(req.params.articleId, articleData, { new: true });
+    req.body.content = JSON.parse(req.body.content);
+    req.body.infoBox = JSON.parse(req.body.infoBox);
+    req.body.references = JSON.parse(req.body.references);
 
-        const portal = await Portal.findById(portalid);
-        if (portal) {
-            portal.articles.push(article._id);
-            await portal.save();
-        } else {
-            throw new Error('Portal not found');
-        }
-        
+    try {
+        const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
+
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }

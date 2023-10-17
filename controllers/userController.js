@@ -1,4 +1,5 @@
-const User = require('../model/user');
+const User = require('../model/user').User;
+const MailingList = require('../model/user').MailingList;
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
@@ -19,8 +20,18 @@ exports.createUser = async (req, res) => {
     });
 
     await user.save();
+
+    const mailingEntry = new MailingList({
+      email: req.body.email
+    });
+    await mailingEntry.save();
+
     res.status(201).json({ message: 'User created successfully', user });
   } catch (error) {
+
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      return res.status(400).json({ error: 'Email already exists in the mailing list.' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -29,7 +40,7 @@ exports.loginUser = async (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) return res.status(400).json({ error: info.message });
-    
+
     req.logIn(user, (err) => {
       if (err) return next(err);
       return res.status(200).json({
@@ -86,7 +97,10 @@ exports.getUserByUsername = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }, '-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.status(200).json(user);
+
+    const isOwnProfile = req.user && req.user.username === req.params.username;
+
+    res.status(200).json({ user, isOwnProfile });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -98,9 +112,30 @@ exports.updateUser = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
   try {
+    if (req.user.username !== req.body.username) {
+      return res.status(403).json({ error: 'You are not authorized to perform this action' });
+    }
+
+    const oldUserData = await User.findById(req.params.userId);
+    const oldEmail = oldUserData.email;
+
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      req.body.password = hashedPassword;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
+
+    if (oldEmail !== req.body.email) {
+      await MailingList.findOneAndUpdate({ email: oldEmail }, { email: req.body.email });
+    }
+
     res.status(200).json(updatedUser);
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      return res.status(400).json({ error: 'Updated email already exists in the mailing list.' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
