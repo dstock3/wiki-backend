@@ -104,11 +104,15 @@ exports.updatePortal = async (req, res) => {
 
 exports.deletePortal = async (req, res) => {
     try {
-        const portal = await Portal.findByIdAndRemove(req.params.portalId);
+        const portal = await Portal.findById(req.params.portalId);
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
-        res.status(200).json({ message: 'Portal deleted successfully' });
+
+        await Article.deleteMany({ _id: { $in: portal.articles } });
+        await portal.remove();
+
+        res.status(200).json({ message: 'Portal and its associated articles deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
