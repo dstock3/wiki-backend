@@ -5,7 +5,10 @@ const { validationResult } = require('express-validator');
 exports.getAllPortals = async (req, res) => {
     try {
         const portals = await Portal.find();
-        res.status(200).json(portals);
+
+        isLoggedIn = req.user ? true : false;
+
+        res.status(200).json({ portals, isLoggedIn });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -52,6 +55,10 @@ exports.createPortal = async (req, res) => {
     if (!errors.isEmpty()) {
         console.log("Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
+    }
+
+    if (!req.user) {
+        return res.status(401).json({ error: 'You need to be logged in to create a portal' });
     }
 
     try {
