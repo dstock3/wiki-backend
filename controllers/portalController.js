@@ -110,7 +110,15 @@ exports.deletePortal = async (req, res) => {
         if (!portal) {
             return res.status(404).json({ error: 'Portal not found' });
         }
-        
+        if (portal.owner.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'You do not have permission to delete this portal' });
+        }
+
+        const isViewerOwner = req.user && portal.owner.equals(req.user._id);
+        if (!isViewerOwner) {
+            return res.status(403).json({ error: 'You do not have permission to delete this portal' });
+        }
+
         await Article.deleteMany({ _id: { $in: portal.articles } });
         await Portal.deleteOne({ _id: req.params.portalId });
 
