@@ -43,4 +43,8 @@ const TalkPageSchema = new mongoose.Schema({
   discussions: [TopicSchema]
 });
 
-module.exports = mongoose.model('TalkPage', TalkPageSchema);
+module.exports = {
+  Comment: mongoose.model('Comment', CommentSchema),
+  Topic: mongoose.model('Topic', TopicSchema),
+  TalkPage: mongoose.model('TalkPage', TalkPageSchema),
+};

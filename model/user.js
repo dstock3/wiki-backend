@@ -2,14 +2,18 @@ const mongoose = require('mongoose');
 
 // Contribution Schema for storing user's contributions
 const ContributionSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true
-  },
-  link: {
-    type: String,
-    required: true
-  }
+  articles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Article'
+  }],
+  topics: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Topic'
+  }],
+  comments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment'
+  }]
 });
 
 // User Schema to store user data
