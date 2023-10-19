@@ -121,7 +121,7 @@ exports.updateTopic = async (req, res) => {
     }
     
     if (!topic.author.equals(req.user._id)) {
-      return res.status(403).json({ error: 'You do not have permission to update this topic' });
+      return res.status(403).json({ error: 'You do not have permission to edit this topic' });
     }
 
     Object.assign(topic, req.body);
@@ -138,9 +138,17 @@ exports.deleteTopic = async (req, res) => {
       const talkPage = await TalkPage.findById(talkPageId);
       const topic = talkPage.discussions.id(topicId);
       const articleId = talkPage.articleId;
-      const author = await Article.findById(articleId).author;
+      const articleAuthor = await Article.findById(articleId).author;
 
-      if ((!author.equals(req.user._id)) | (!topic.author.equals(req.user._id))) {
+      let isAuthorized = false;
+
+      if (req.user) {
+        if ((req.user._id.equals(articleAuthor)) | (req.user._id.equals(topic.author))) {
+          isAuthorized = true;
+        }
+      }
+
+      if (!isAuthorized) {
         return res.status(403).json({ error: 'You do not have permission to delete this topic' });
       }
 
@@ -163,9 +171,14 @@ exports.createComment = async (req, res) => {
 
   try {
       const talkPage = await TalkPage.findById(talkPageId);
+      const article = await Article.findById(talkPage.articleId);
       const topic = talkPage.discussions.id(topicId);
       topic.comments.push({ username, content, date });
       await talkPage.save();
+
+      const user = await User.findById(req.user._id);
+      user.contributions.comments.push(article._id);
+      await user.save();
 
       res.status(201).json({ message: "Comment added successfully!" });
   } catch (error) {
@@ -185,6 +198,9 @@ exports.updateComment = async (req, res) => {
     const comment = topic.comments.id(commentId);
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
+    }
+    if (!comment.author.equals(req.user._id)) {
+      return res.status(403).json({ error: 'You do not have permission to edit this comment' });
     }
     Object.assign(comment, req.body);
     await talkPage.save();
