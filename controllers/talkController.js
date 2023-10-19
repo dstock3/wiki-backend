@@ -214,7 +214,23 @@ exports.deleteComment = async (req, res) => {
     const { talkPageId, topicId, commentId } = req.params;
     try {
       const talkPage = await TalkPage.findById(talkPageId);
+      const articleId = talkPage.articleId;
+      const articleAuthor = await Article.findById(articleId).author;
       const topic = talkPage.discussions.id(topicId);
+      const comment = topic.comments.id(commentId);
+
+      let isAuthorized = false;
+
+      if (req.user) {
+        if ((req.user._id.equals(articleAuthor)) | (req.user._id.equals(comment.author))) {
+          isAuthorized = true;
+        }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ error: 'You do not have permission to delete this comment' });
+      }
+
       topic.comments.id(commentId).remove();
       await talkPage.save();
       res.status(200).json({ message: 'Comment deleted successfully' });
