@@ -28,40 +28,11 @@ exports.createTalkPage = async (req, res) => {
 
 exports.getTalkPage = async (req, res) => {
   try {
-    //find the talkpage by articleId
     const talkPage = await TalkPage.findOne({ articleId: req.params.articleId });
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
     res.status(200).json(talkPage);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-exports.updateTalkPage = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
-  try {
-    const updatedTalkPage = await TalkPage.findByIdAndUpdate(req.params.talkPageId, req.body, { new: true });
-    if (!updatedTalkPage) {
-      return res.status(404).json({ error: 'TalkPage not found' });
-    }
-    res.status(200).json(updatedTalkPage);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-exports.deleteTalkPage = async (req, res) => {
-  try {
-    const talkPage = await TalkPage.findByIdAndDelete(req.params.talkPageId);
-    if (!talkPage) {
-      return res.status(404).json({ error: 'TalkPage not found' });
-    }
-    res.status(204).json({ message: 'TalkPage deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
