@@ -1,5 +1,6 @@
 const User = require('../model/user').User;
 const MailingList = require('../model/user').MailingList;
+const Portal = require('../model/portal');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');

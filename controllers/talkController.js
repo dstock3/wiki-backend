@@ -1,5 +1,6 @@
 const TalkPage = require('../model/talk').TalkPage;
 const Article = require('../model/article');
+const User = require('../model/user').User;
 const { validationResult } = require('express-validator');
 
 exports.listAllTalkPages = async (req, res) => {
@@ -90,6 +91,10 @@ exports.createTopic = async (req, res) => {
       talkPage.discussions.push({ topicId, topic });
       await talkPage.save();
 
+      const user = await User.findById(req.user._id);
+      user.contributions.topics.push(article._id);
+      await user.save();
+
       res.status(201).json({ message: "Topic created successfully!" });
   } catch (error) {
       console.log(error)
@@ -105,10 +110,20 @@ exports.updateTopic = async (req, res) => {
   const { talkPageId, topicId } = req.params;
   try {
     const talkPage = await TalkPage.findById(talkPageId);
+    
+    if (!talkPage) {
+      return res.status(404).json({ error: 'TalkPage not found' });
+    }
+
     const topic = talkPage.discussions.id(topicId);
     if (!topic) {
       return res.status(404).json({ error: 'Topic not found' });
     }
+    
+    if (!topic.author.equals(req.user._id)) {
+      return res.status(403).json({ error: 'You do not have permission to update this topic' });
+    }
+
     Object.assign(topic, req.body);
     await talkPage.save();
     res.status(200).json(topic);

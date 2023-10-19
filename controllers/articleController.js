@@ -20,7 +20,6 @@ exports.createArticle = async (req, res) => {
             discussions: []
         });
         await talkPage.save();
-
         article.talk = talkPage._id;
         
         await article.save();
@@ -36,6 +35,7 @@ exports.createArticle = async (req, res) => {
         const user = await User.findById(req.user._id);
         user.contributions.articles.push(article._id);
         await user.save();
+        console.log(user)
 
         res.status(201).json(article);
     } catch (error) {
@@ -79,7 +79,6 @@ exports.updateArticle = async (req, res) => {
             return res.status(404).json({ message: 'Article not found' });
         }
 
-        
         const user = await User.findById(req.user._id);
 
         if (!user.contributions.articles.includes(article._id)) {

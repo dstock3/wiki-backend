@@ -6,8 +6,9 @@ const CommentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     required: true
   },
-  username: {
-    type: String,
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   content: {
@@ -28,6 +29,11 @@ const TopicSchema = new mongoose.Schema({
   },
   topic: {
     type: String,
+    required: true
+  },
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   comments: [CommentSchema]
