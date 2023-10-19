@@ -34,7 +34,7 @@ exports.getTalkPage = async (req, res) => {
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
-    res.status(200).json(talkPage);
+    res.status(200).json({talkPage, isAuthorized: true});
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
