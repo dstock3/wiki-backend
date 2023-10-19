@@ -1,4 +1,6 @@
 const TalkPage = require('../model/talk').TalkPage;
+const Topic = require('../model/talk').Topic;
+const Comment = require('../model/talk').Comment;
 const Article = require('../model/article');
 const User = require('../model/user').User;
 const { validationResult } = require('express-validator');
@@ -46,30 +48,38 @@ exports.createTopic = async (req, res) => {
   }*/
 
   const articleId = req.params.articleId;
-  const { topicId, topic } = req.body;
-
+  
   try {
-      const article = await Article.findById(articleId);
-      if (!article) {
-          return res.status(404).json({ error: 'Article not found' });
-      }
+    const article = await Article.findById(articleId);
+    if (!article) {
+        return res.status(404).json({ error: 'Article not found' });
+    }
 
-      const talkPage = await TalkPage.findById(article.talk);
-      if (!talkPage) {
-          return res.status(404).json({ error: 'TalkPage not found for this article' });
-      }
+    const talkPage = await TalkPage.findById(article.talk);
+    if (!talkPage) {
+        return res.status(404).json({ error: 'TalkPage not found for this article' });
+    }
 
-      talkPage.discussions.push({ topicId, topic });
-      await talkPage.save();
+    const newTopic = new Topic({
+      ...req.body,
+      author: req.user._id,
+      talkPage: talkPage._id
 
-      const user = await User.findById(req.user._id);
-      user.contributions.topics.push(article._id);
-      await user.save();
+    });
 
-      res.status(201).json({ message: "Topic created successfully!" });
+    talkPage.discussions.push(newTopic);
+
+    console.log("New Topic: " + newTopic)
+    await talkPage.save();
+
+    const user = await User.findById(req.user._id);
+    user.contributions.topics.push(newTopic._id);
+    await user.save();
+
+    res.status(201).json({ message: "Topic created successfully!" });
   } catch (error) {
-      console.log(error)
-      res.status(500).json({ error: error.message });
+    console.log(error)
+    res.status(500).json({ error: error.message });
   }
 };
 
