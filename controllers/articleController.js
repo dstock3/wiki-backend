@@ -34,9 +34,6 @@ exports.createArticle = async (req, res) => {
         }
 
         const user = await User.findById(req.user._id);
-        if (!user.contributions) {
-            user.contributions = { articles: [], topics: [], comments: [] };
-        }
         user.contributions.articles.push(article._id);
         await user.save();
 

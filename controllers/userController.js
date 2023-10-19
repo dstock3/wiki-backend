@@ -16,7 +16,12 @@ exports.createUser = async (req, res) => {
 
     const user = new User({
       ...req.body,
-      password: hashedPassword
+      password: hashedPassword,
+      contributions: {
+          articles: [],
+          topics: [],
+          comments: []
+      }
     });
 
     await user.save();

@@ -40,7 +40,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  contributions: [ContributionSchema]
+  contributions: ContributionSchema
 });
 
 const MailingListSchema = new mongoose.Schema({
