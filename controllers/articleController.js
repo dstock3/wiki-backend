@@ -1,6 +1,7 @@
 const Article = require('../model/article');
 const Portal = require('../model/portal');
-const TalkPage = require('../model/talk');
+const User = require('../model/user').User;
+const TalkPage = require('../model/talk').TalkPage;
 const { validationResult } = require('express-validator');
 
 exports.createArticle = async (req, res) => {
@@ -31,6 +32,13 @@ exports.createArticle = async (req, res) => {
         } else {
             throw new Error('Portal not found');
         }
+
+        const user = await User.findById(req.user._id);
+        if (!user.contributions) {
+            user.contributions = { articles: [], topics: [], comments: [] };
+        }
+        user.contributions.articles.push(article._id);
+        await user.save();
 
         res.status(201).json(article);
     } catch (error) {
@@ -73,6 +81,15 @@ exports.updateArticle = async (req, res) => {
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
+
+        
+        const user = await User.findById(req.user._id);
+
+        if (!user.contributions.articles.includes(article._id)) {
+            user.contributions.articles.push(article._id);
+            await user.save();
+        }
+
         res.json(article);
     } catch (error) {
         console.error("Error in updateArticle:", error);
@@ -86,6 +103,12 @@ exports.deleteArticle = async (req, res) => {
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
+        
+        await User.updateMany(
+            { "contributions.articles": req.params.articleId },
+            { $pull: { "contributions.articles": req.params.articleId } }
+        );
+
         res.json({ message: 'Article deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });

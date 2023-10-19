@@ -1,4 +1,4 @@
-const TalkPage = require('../model/talk');
+const TalkPage = require('../model/talk').TalkPage;
 const Article = require('../model/article');
 const { validationResult } = require('express-validator');
 
