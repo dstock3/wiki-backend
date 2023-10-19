@@ -136,6 +136,14 @@ exports.deleteTopic = async (req, res) => {
     const { talkPageId, topicId } = req.params;
     try {
       const talkPage = await TalkPage.findById(talkPageId);
+      const topic = talkPage.discussions.id(topicId);
+      const articleId = talkPage.articleId;
+      const author = await Article.findById(articleId).author;
+
+      if ((!author.equals(req.user._id)) | (!topic.author.equals(req.user._id))) {
+        return res.status(403).json({ error: 'You do not have permission to delete this topic' });
+      }
+
       talkPage.discussions.id(topicId).remove();
       await talkPage.save();
       res.status(200).json({ message: 'Topic deleted successfully' });

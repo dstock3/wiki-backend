@@ -35,8 +35,7 @@ exports.createArticle = async (req, res) => {
         const user = await User.findById(req.user._id);
         user.contributions.articles.push(article._id);
         await user.save();
-        console.log(user)
-
+        
         res.status(201).json(article);
     } catch (error) {
         console.error("Error Stack Trace:", error.stack);
