@@ -104,6 +104,11 @@ exports.deleteArticle = async (req, res) => {
             { $pull: { "contributions.articles": req.params.articleId } }
         );
 
+        const talkPage = await TalkPage.findOne({ articleId: req.params.articleId });
+        if (talkPage) {
+            await talkPage.remove();
+        }
+
         res.json({ message: 'Article deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
