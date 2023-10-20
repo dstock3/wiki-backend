@@ -162,16 +162,21 @@ exports.createComment = async (req, res) => {
   }
   const talkPageId = req.params.talkPageId;
   const topicId = req.params.topicId;
-  const { username, content, date } = req.body;
+
 
   try {
       const talkPage = await TalkPage.findById(talkPageId);
       const article = await Article.findById(talkPage.articleId);
       const topic = talkPage.discussions.id(topicId);
-      topic.comments.push({ username, content, date });
+      const user = await User.findById(req.user._id);
+      const commentData = {
+        author: user._id,
+        content: req.body.content,
+        topic: topic._id
+      };
+      topic.comments.push(commentData);
       await talkPage.save();
 
-      const user = await User.findById(req.user._id);
       user.contributions.comments.push(article._id);
       await user.save();
 

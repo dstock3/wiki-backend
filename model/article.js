@@ -88,6 +88,11 @@ const ArticleSchema = new mongoose.Schema({
         type: String,
         enum: ['draft', 'published', 'archived'],
         default: 'draft'
+    },
+    date: {
+        type: Date,
+        required: true,
+        default: Date.now
     }
 });
 

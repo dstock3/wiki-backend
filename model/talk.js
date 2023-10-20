@@ -18,7 +18,8 @@ const CommentSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   }
 });
 
@@ -42,7 +43,12 @@ const TopicSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  comments: [CommentSchema]
+  comments: [CommentSchema],
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now
+  }
 });
 
 // TalkPage Schema to store a list of topics associated with an article

@@ -38,6 +38,11 @@ const PortalSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now
   }
 }, {
   timestamps: true
