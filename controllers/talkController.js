@@ -68,8 +68,6 @@ exports.createTopic = async (req, res) => {
     });
 
     talkPage.discussions.push(newTopic);
-
-    console.log("New Topic: " + newTopic)
     await talkPage.save();
 
     const user = await User.findById(req.user._id);
@@ -107,6 +105,14 @@ exports.updateTopic = async (req, res) => {
 
     Object.assign(topic, req.body);
     await talkPage.save();
+
+    const user = await User.findById(req.user._id);
+
+    if (!user.contributions.topics.includes(topic._id)) {
+      user.contributions.topics.push(topic._id);
+      await user.save();
+    }
+    
     res.status(200).json(topic);
   } catch (error) {
     res.status(500).json({ error: error.message });
