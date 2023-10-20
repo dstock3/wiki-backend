@@ -141,6 +141,14 @@ exports.deleteTopic = async (req, res) => {
 
       talkPage.discussions.id(topicId).remove();
       await talkPage.save();
+
+      const user = await User.findById(req.user._id);
+      const index = user.contributions.topics.indexOf(topicId);
+      if (index > -1) {
+        user.contributions.topics.splice(index, 1);
+        await user.save();
+      }
+
       res.status(200).json({ message: 'Topic deleted successfully' });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -191,6 +199,13 @@ exports.updateComment = async (req, res) => {
     }
     Object.assign(comment, req.body);
     await talkPage.save();
+
+    const user = await User.findById(req.user._id);
+    if (!user.contributions.comments.includes(comment._id)) {
+      user.contributions.comments.push(comment._id);
+      await user.save();
+    }
+
     res.status(200).json(comment);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -220,6 +235,14 @@ exports.deleteComment = async (req, res) => {
 
       topic.comments.id(commentId).remove();
       await talkPage.save();
+      
+      const user = await User.findById(req.user._id);
+      const index = user.contributions.comments.indexOf(commentId);
+      if (index > -1) {
+        user.contributions.comments.splice(index, 1);
+        await user.save();
+      }
+
       res.status(200).json({ message: 'Comment deleted successfully' });
     } catch (error) {
       res.status(500).json({ error: error.message });
