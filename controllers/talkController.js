@@ -156,13 +156,15 @@ exports.deleteTopic = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
+  /*
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
   }
+  */
   const talkPageId = req.params.talkPageId;
   const topicId = req.params.topicId;
-
+  console.log(req.body)
 
   try {
       const talkPage = await TalkPage.findById(talkPageId);
