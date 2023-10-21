@@ -156,26 +156,37 @@ exports.deleteTopic = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
-  /*
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
-  */
-  const talkPageId = req.params.talkPageId;
-  const topicId = req.params.topicId;
-  console.log(req.body)
-
   try {
-      const talkPage = await TalkPage.findById(talkPageId);
+      const articleId = req.params.articleId;
+      const topicId = req.params.topicId;
+      
+      const talkPage = await TalkPage.findOne({ articleId: articleId });
+
+      if (!talkPage) {
+          throw new Error('TalkPage not found');
+      }
+
       const article = await Article.findById(talkPage.articleId);
-      const topic = talkPage.discussions.id(topicId);
+      if (!article) {
+          throw new Error('Article not found');
+      }
+
       const user = await User.findById(req.user._id);
+      if (!user) {
+          throw new Error('User not found');
+      }
+
+      const topic = talkPage.discussions.id(topicId);
+      if (!topic) {
+          throw new Error('Topic not found');
+      }
+
       const commentData = {
-        author: user._id,
-        content: req.body.content,
-        topic: topic._id
+          author: user._id,
+          content: req.body.content,
+          topic: topic._id
       };
+      
       topic.comments.push(commentData);
       await talkPage.save();
 
@@ -184,6 +195,7 @@ exports.createComment = async (req, res) => {
 
       res.status(201).json({ message: "Comment added successfully!" });
   } catch (error) {
+      console.error("Error Stack Trace:", error.stack);
       res.status(500).json({ error: error.message });
   }
 };
