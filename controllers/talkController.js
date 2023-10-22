@@ -48,15 +48,20 @@ exports.getTalkPage = async (req, res) => {
       return acc;
     }, {});
 
+    const currentUserId = req.user ? req.user._id.toString() : null;
 
     talkPage.discussions.forEach(topic => {
+      const topicAuthorId = topic.author.toString();
       topic.author = userMap[topic.author];
+      topic.isAuthorized = currentUserId && topicAuthorId === currentUserId;
       topic.comments.forEach(comment => {
+        const commentAuthorId = comment.author.toString();
         comment.author = userMap[comment.author];
+        comment.isAuthorized = currentUserId && commentAuthorId === currentUserId;
       });
     });
 
-    res.status(200).json({talkPage, isAuthorized: true});
+    res.status(200).json({talkPage, isAuthorized: Boolean(currentUserId)});
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
