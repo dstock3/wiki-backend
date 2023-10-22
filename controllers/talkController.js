@@ -30,12 +30,35 @@ exports.createTalkPage = async (req, res) => {
 
 exports.getTalkPage = async (req, res) => {
   try {
-    const talkPage = await TalkPage.findOne({ articleId: req.params.articleId });
+    const talkPage = await TalkPage.findOne({ articleId: req.params.articleId }).lean();
     if (!talkPage) {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
+
+    let userIds = new Set();
+    talkPage.discussions.forEach(topic => {
+      userIds.add(topic.author);
+      topic.comments.forEach(comment => userIds.add(comment.author));
+    });
+    userIds = [...userIds];
+
+    const users = await User.find({ _id: { $in: userIds }}).lean();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user.username;
+      return acc;
+    }, {});
+
+
+    talkPage.discussions.forEach(topic => {
+      topic.author = userMap[topic.author];
+      topic.comments.forEach(comment => {
+        comment.author = userMap[comment.author];
+      });
+    });
+
     res.status(200).json({talkPage, isAuthorized: true});
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -180,11 +203,11 @@ exports.createComment = async (req, res) => {
         throw new Error('Topic not found');
     }
 
-    const commentData = {
-        author: user._id,
-        content: req.body.content,
-        topic: topic._id
-    };
+    const commentData = new Comment({
+      author: user._id,
+      content: req.body.content,
+      topic: topic._id
+    });
     
     topic.comments.push(commentData);
     await talkPage.save();
