@@ -156,44 +156,46 @@ exports.deleteTopic = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
-  const errors = validationResult(req);
+  /*const errors = validationResult(req);
   if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
-  }
-  const talkPageId = req.params.talkPageId;
-  const topicId = req.params.topicId;
+  }*/
+  try {
+    const articleId = req.params.articleId;
+    const talkPage = await TalkPage.findOne({ articleId: articleId });
+    const topicId = req.params.topicId;
 
-      const article = await Article.findById(talkPage.articleId);
-      if (!article) {
-          throw new Error('Article not found');
-      }
+    const article = await Article.findById(articleId);
+    if (!article) {
+        throw new Error('Article not found');
+    }
 
-      const user = await User.findById(req.user._id);
-      if (!user) {
-          throw new Error('User not found');
-      }
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new Error('User not found');
+    }
 
-      const topic = talkPage.discussions.id(topicId);
-      if (!topic) {
-          throw new Error('Topic not found');
-      }
+    const topic = talkPage.discussions.id(topicId);
+    if (!topic) {
+        throw new Error('Topic not found');
+    }
 
-      const commentData = {
-          author: user._id,
-          content: req.body.content,
-          topic: topic._id
-      };
-      
-      topic.comments.push(commentData);
-      await talkPage.save();
+    const commentData = {
+        author: user._id,
+        content: req.body.content,
+        topic: topic._id
+    };
+    
+    topic.comments.push(commentData);
+    await talkPage.save();
 
-      user.contributions.comments.push(article._id);
-      await user.save();
+    user.contributions.comments.push(article._id);
+    await user.save();
 
-      res.status(201).json({ message: "Comment added successfully!" });
+    res.status(201).json({ message: "Comment added successfully!" });
   } catch (error) {
-      console.error("Error Stack Trace:", error.stack);
-      res.status(500).json({ error: error.message });
+    console.error("Error Stack Trace:", error.stack);
+    res.status(500).json({ error: error.message });
   }
 };
 
