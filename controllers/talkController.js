@@ -163,7 +163,6 @@ exports.createComment = async (req, res) => {
   const talkPageId = req.params.talkPageId;
   const topicId = req.params.topicId;
 
-
   try {
       const talkPage = await TalkPage.findById(talkPageId);
       const article = await Article.findById(talkPage.articleId);
