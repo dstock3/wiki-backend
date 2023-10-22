@@ -71,6 +71,18 @@ exports.getTalkPage = async (req, res) => {
   }
 };
 
+exports.getTopicById = async (req, res) => {
+  try {
+    const topic = await Topic.findById(req.params.topicId).lean();
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+    res.status(200).json({ topic });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 exports.createTopic = async (req, res) => {
   /*
   const errors = validationResult(req);

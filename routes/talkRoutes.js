@@ -7,6 +7,7 @@ const csrfProtection = csurf({ cookie: true });
 const { talkValidationRules } = require('../validators/talkValidator');
 
 router.post('/:articleId/topics', ensureAuthenticated, csrfProtection, /*...talkValidationRules,*/ talkController.createTopic);
+router.get('/:articleId/topics/:topicId', talkController.getTopicById);
 router.put('/:articleId/topics/:topicId', ensureAuthenticated, csrfProtection, ...talkValidationRules, talkController.updateTopic);
 router.delete('/:articleId/topics/:topicId', ensureAuthenticated, csrfProtection, talkController.deleteTopic);
 
