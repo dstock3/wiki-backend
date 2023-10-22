@@ -73,12 +73,20 @@ exports.getTalkPage = async (req, res) => {
 
 exports.getTopicById = async (req, res) => {
   try {
-    const topic = await Topic.findById(req.params.topicId).lean();
+    const talkPage = await TalkPage.findOne({ "discussions._id": req.params.topicId }).lean();
+    if (!talkPage) {
+      return res.status(404).json({ error: 'TalkPage containing the topic not found' });
+    }
+
+    const topic = talkPage.discussions.find(d => d._id.toString() === req.params.topicId);
+
     if (!topic) {
       return res.status(404).json({ error: 'Topic not found' });
     }
+
     res.status(200).json({ topic });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 };
