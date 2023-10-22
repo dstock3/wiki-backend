@@ -171,39 +171,50 @@ exports.updateTopic = async (req, res) => {
 };
 
 exports.deleteTopic = async (req, res) => {
-    const { talkPageId, topicId } = req.params;
-    try {
-      const talkPage = await TalkPage.findById(talkPageId);
-      const topic = talkPage.discussions.id(topicId);
-      const articleId = talkPage.articleId;
-      const articleAuthor = await Article.findById(articleId).author;
+  try {
+    const { articleId, topicId } = req.params;
 
-      let isAuthorized = false;
+    const talkPage = await TalkPage.findOne({ articleId: articleId });
 
-      if (req.user) {
-        if ((req.user._id.equals(articleAuthor)) | (req.user._id.equals(topic.author))) {
-          isAuthorized = true;
-        }
-      }
-
-      if (!isAuthorized) {
-        return res.status(403).json({ error: 'You do not have permission to delete this topic' });
-      }
-
-      talkPage.discussions.id(topicId).remove();
-      await talkPage.save();
-
-      const user = await User.findById(req.user._id);
-      const index = user.contributions.topics.indexOf(topicId);
-      if (index > -1) {
-        user.contributions.topics.splice(index, 1);
-        await user.save();
-      }
-
-      res.status(200).json({ message: 'Topic deleted successfully' });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    if (!talkPage) {
+      return res.status(404).json({ error: 'TalkPage not found' });
     }
+
+    const topic = talkPage.discussions.id(topicId);
+
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    const articleAuthor = await Article.findById(articleId).author;
+
+    let isAuthorized = false;
+
+    if (req.user) {
+      if (req.user._id.equals(articleAuthor) || req.user._id.equals(topic.author)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: 'You do not have permission to delete this topic' });
+    }
+
+    talkPage.discussions.pull({ _id: topicId });
+    await talkPage.save();
+
+    const user = await User.findById(req.user._id);
+    const index = user.contributions.topics.indexOf(topicId);
+    if (index > -1) {
+      user.contributions.topics.splice(index, 1);
+      await user.save();
+    }
+
+    res.status(200).json({ message: 'Topic deleted successfully' });
+  } catch (error) {
+    console.error("Error in deleteTopic:", error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 exports.createComment = async (req, res) => {
