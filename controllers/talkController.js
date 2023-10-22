@@ -61,6 +61,9 @@ exports.getTalkPage = async (req, res) => {
       });
     });
 
+    const article = await Article.findById(req.params.articleId).lean();
+    talkPage.articleTitle = article.title;
+
     res.status(200).json({talkPage, isAuthorized: Boolean(currentUserId)});
   } catch (error) {
     console.error(error);
