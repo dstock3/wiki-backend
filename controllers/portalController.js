@@ -1,6 +1,5 @@
 const Portal = require('../model/portal');
 const Article = require('../model/article');
-const { validationResult } = require('express-validator');
 
 exports.getAllPortals = async (req, res) => {
     try {
@@ -51,12 +50,6 @@ exports.getArticlesByPortalId = async (req, res) => {
 };
 
 exports.createPortal = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        console.log("Validation errors:", errors.array());
-        return res.status(400).json({ errors: errors.array() });
-    }
-
     if (!req.user) {
         return res.status(401).json({ error: 'You need to be logged in to create a portal' });
     }
@@ -81,11 +74,6 @@ exports.createPortal = async (req, res) => {
 };
 
 exports.updatePortal = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
     try {
         const portalExists = await Portal.findById(req.params.portalId);
 

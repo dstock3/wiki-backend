@@ -15,10 +15,6 @@ exports.listAllTalkPages = async (req, res) => {
 };
 
 exports.createTalkPage = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
   try {
     const newTalkPage = new TalkPage(req.body);
     const savedTalkPage = await newTalkPage.save();
@@ -92,12 +88,6 @@ exports.getTopicById = async (req, res) => {
 };
 
 exports.createTopic = async (req, res) => {
-  /*
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }*/
-
   const articleId = req.params.articleId;
   
   try {
@@ -133,10 +123,6 @@ exports.createTopic = async (req, res) => {
 };
 
 exports.updateTopic = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
   const { talkPageId, topicId } = req.params;
   try {
     const talkPage = await TalkPage.findById(talkPageId);
@@ -218,10 +204,6 @@ exports.deleteTopic = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
-  /*const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }*/
   try {
     const articleId = req.params.articleId;
     const talkPage = await TalkPage.findOne({ articleId: articleId });
@@ -262,10 +244,6 @@ exports.createComment = async (req, res) => {
 };
 
 exports.updateComment = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
   const { talkPageId, topicId, commentId } = req.params;
   try {
     const talkPage = await TalkPage.findById(talkPageId);
