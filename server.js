@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require("express-rate-limit");
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const cors = require('cors');
 const passport = require('passport');
 const initializePassport = require('./passport-config');
@@ -17,6 +18,7 @@ const userRoutes = require('./routes/userRoutes');
 
 SECRET = process.env.SECRET_KEY;
 NAME = process.env.SESSION_NAME;
+const MONGO_URI = process.env.MONGO_URI;
 
 require('./database.js');
 
@@ -52,10 +54,11 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: { 
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict'
-  }
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict'
+  },
+  store: MongoStore.create({ mongoUrl: MONGO_URI }) 
 }));
 
 app.use(passport.initialize());
