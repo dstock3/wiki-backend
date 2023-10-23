@@ -28,8 +28,10 @@ exports.createUser = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        const errorMessage = errors.array().map(err => err.msg).join(', ');
+        return res.status(400).json({ error: errorMessage });
     }
+
     try {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -52,11 +54,15 @@ exports.createUser = [
       await mailingEntry.save();
 
       res.status(201).json({ message: 'User created successfully', user });
+
     } catch (error) {
-      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
-        return res.status(400).json({ error: 'Email already exists in the mailing list.' });
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0]; 
+        return res.status(400).json({ error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.` });
       }
-      res.status(500).json({ error: error.message });
+
+      console.error(error); 
+      res.status(500).json({ error: 'An unexpected error occurred. Please try again.' });
     }
   }
 ];
