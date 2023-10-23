@@ -3,44 +3,63 @@ const MailingList = require('../model/user').MailingList;
 const Portal = require('../model/portal');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const { validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 NAME = process.env.SESSION_NAME;
 
-exports.createUser = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+const userValidationRules = [
+  check('username')
+    .trim()
+    .notEmpty().withMessage('Username is required.')
+    .isLength({ min: 3 }).withMessage('Username should be at least 3 characters long.')
+    .escape(),
+  check('email')
+    .trim()
+    .notEmpty().withMessage('Email is required.')
+    .isEmail().withMessage('Invalid email format.')
+    .normalizeEmail(),
+  check('password')
+    .trim()
+    .notEmpty().withMessage('Password is required.')
+    .isLength({ min: 6 }).withMessage('Password should be at least 6 characters long.')
+];
 
-    const user = new User({
-      ...req.body,
-      password: hashedPassword,
-      contributions: {
-          articles: [],
-          topics: [],
-          comments: []
-      }
-    });
-
-    await user.save();
-
-    const mailingEntry = new MailingList({
-      email: req.body.email
-    });
-    await mailingEntry.save();
-
-    res.status(201).json({ message: 'User created successfully', user });
-  } catch (error) {
-
-    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
-      return res.status(400).json({ error: 'Email already exists in the mailing list.' });
+exports.createUser = [
+  ...userValidationRules,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-    res.status(500).json({ error: error.message });
+    try {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+      const user = new User({
+        ...req.body,
+        password: hashedPassword,
+        contributions: {
+            articles: [],
+            topics: [],
+            comments: []
+        }
+      });
+
+      await user.save();
+
+      const mailingEntry = new MailingList({
+        email: req.body.email
+      });
+      await mailingEntry.save();
+
+      res.status(201).json({ message: 'User created successfully', user });
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+        return res.status(400).json({ error: 'Email already exists in the mailing list.' });
+      }
+      res.status(500).json({ error: error.message });
+    }
   }
-};
+];
 
 exports.loginUser = async (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
