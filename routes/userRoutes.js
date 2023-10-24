@@ -25,8 +25,4 @@ router.get('/username/:username', userController.getUserByUsername);
 router.put('/:userId', ensureAuthenticated, csrfProtection, userController.updateUser);
 router.delete('/:userId', ensureAuthenticated, csrfProtection, userController.deleteUser);
 
-router.post('/:userId/contributions', ensureAuthenticated, csrfProtection, userController.addContribution);
-router.put('/:userId/contributions/:contributionId', ensureAuthenticated, csrfProtection, userController.updateContribution);
-router.delete('/:userId/contributions/:contributionId', ensureAuthenticated, csrfProtection, userController.deleteContribution);
-
 module.exports = router;

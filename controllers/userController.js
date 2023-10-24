@@ -137,39 +137,69 @@ exports.getUserByUsername = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+const updateUserValidationRules = [
+  check('username')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('Username is required.')
+    .isLength({ min: 3 }).withMessage('Username should be at least 3 characters long.')
+    .escape(),
+  check('email')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('Email is required.')
+    .isEmail().withMessage('Invalid email format.')
+    .normalizeEmail(),
+  check('password')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('Password is required when updating password.')
+    .isLength({ min: 6 }).withMessage('Password should be at least 6 characters long when updating.'),
+  check('bio')
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage('Your bio should not exceed 500 characters.')
+    .escape()
+];
+
+exports.updateUser = [
+  ...updateUserValidationRules,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const oldUserData = await User.findById(req.params.userId);
+      if (!oldUserData) {
+        return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+      }
+
+      if (req.user.username !== req.body.username) {
+        return res.status(403).json({ errors: [{ msg: 'You are not authorized to perform this action' }] });
+      }
+
+      if (req.body.password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+        req.body.password = hashedPassword;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
+
+      if (oldUserData.email !== req.body.email) {
+        await MailingList.findOneAndUpdate({ email: oldUserData.email }, { email: req.body.email });
+      }
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+        return res.status(400).json({ errors: [{ msg: 'Updated email already exists in the mailing list.' }] });
+      }
+      res.status(500).json({ errors: [{ msg: `Error code: ${error.code}. Message: ${error.message}` }] });
+    }
   }
-  try {
-    if (req.user.username !== req.body.username) {
-      return res.status(403).json({ error: 'You are not authorized to perform this action' });
-    }
-
-    const oldUserData = await User.findById(req.params.userId);
-    const oldEmail = oldUserData.email;
-
-    if (req.body.password) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(req.body.password, salt);
-      req.body.password = hashedPassword;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
-
-    if (oldEmail !== req.body.email) {
-      await MailingList.findOneAndUpdate({ email: oldEmail }, { email: req.body.email });
-    }
-
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
-      return res.status(400).json({ error: 'Updated email already exists in the mailing list.' });
-    }
-    res.status(500).json({ error: error.message });
-  }
-};
+];
 
 exports.deleteUser = async (req, res) => {
   try {
@@ -180,36 +210,4 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.addContribution = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId);
-    user.contributions.push(req.body);
-    await user.save();
-    res.status(201).json({ message: 'Contribution added', user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
-exports.updateContribution = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId);
-    const contribution = user.contributions.id(req.params.contributionId);
-    Object.assign(contribution, req.body);
-    await user.save();
-    res.status(200).json(contribution);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.deleteContribution = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId);
-    user.contributions.id(req.params.contributionId).remove();
-    await user.save();
-    res.status(200).json({ message: 'Contribution deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
