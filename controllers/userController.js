@@ -11,12 +11,13 @@ const userValidationRules = [
   check('username')
     .trim()
     .notEmpty().withMessage('Username is required.')
-    .isLength({ min: 3 }).withMessage('Username should be at least 3 characters long.')
+    .isLength({ min: 3, max: 25 }).withMessage('Username should be between 3 and 50 characters long.')
     .escape(),
   check('email')
     .trim()
     .notEmpty().withMessage('Email is required.')
     .isEmail().withMessage('Invalid email format.')
+    .isLength({ max: 35 }).withMessage('Email should not exceed 35 characters.')
     .normalizeEmail(),
   check('password')
     .trim()
