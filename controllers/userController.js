@@ -187,7 +187,12 @@ exports.updateUser = [
         return res.status(403).json({ errors: [{ msg: 'You are not authorized to perform this action' }] });
       }
 
+      if (oldUserData.username !== req.body.username) {
+        logger.info(`User ${oldUserData.username} updated username to ${req.body.username}`);
+      }
+
       if (req.body.password) {
+        logger.info(`User ${oldUserData.username} updated their password`);
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         req.body.password = hashedPassword;
@@ -196,6 +201,7 @@ exports.updateUser = [
       const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
 
       if (oldUserData.email !== req.body.email) {
+        logger.info(`User ${oldUserData.username} updated email from ${oldUserData.email} to ${req.body.email}`);
         await MailingList.findOneAndUpdate({ email: oldUserData.email }, { email: req.body.email });
       }
 
