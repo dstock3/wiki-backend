@@ -232,6 +232,8 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    await MailingList.findOneAndDelete({ email: user.email });
+
     await User.findByIdAndDelete(req.params.userId);
 
     logger.info({
