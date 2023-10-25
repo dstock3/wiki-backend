@@ -4,6 +4,7 @@ const Portal = require('../model/portal');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
+const logger = require('../logger');
 NAME = process.env.SESSION_NAME;
 
 const userValidationRules = [
@@ -47,6 +48,13 @@ exports.createUser = [
       });
 
       await user.save();
+
+      logger.info({
+        action: 'User created',
+        username: user.username,
+        email: user.email,
+        createdDate: new Date().toISOString()
+      });
 
       const mailingEntry = new MailingList({
         email: req.body.email
@@ -203,7 +211,20 @@ exports.updateUser = [
 
 exports.deleteUser = async (req, res) => {
   try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     await User.findByIdAndDelete(req.params.userId);
+
+    logger.info({
+      action: 'User deleted',
+      username: user.username,
+      email: user.email,
+      deletedDate: new Date().toISOString()
+    });
+
     res.status(204).json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
