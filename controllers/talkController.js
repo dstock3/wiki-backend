@@ -98,7 +98,7 @@ exports.createTopic = [
         const errorMessage = errors.array().map(err => err.msg).join(', ');
         return res.status(400).json({ error: errorMessage });
     }
-    
+
     const articleId = req.params.articleId;
     
     try {
@@ -134,39 +134,42 @@ exports.createTopic = [
   }
 ]
 
-exports.updateTopic = async (req, res) => {
-  const { talkPageId, topicId } = req.params;
-  try {
-    const talkPage = await TalkPage.findById(talkPageId);
-    
-    if (!talkPage) {
-      return res.status(404).json({ error: 'TalkPage not found' });
-    }
+exports.updateTopic = [
+  ...topicValidationRules,
+  async (req, res) => {
+    const { talkPageId, topicId } = req.params;
+    try {
+      const talkPage = await TalkPage.findById(talkPageId);
+      
+      if (!talkPage) {
+        return res.status(404).json({ error: 'TalkPage not found' });
+      }
 
-    const topic = talkPage.discussions.id(topicId);
-    if (!topic) {
-      return res.status(404).json({ error: 'Topic not found' });
-    }
-    
-    if (!topic.author.equals(req.user._id)) {
-      return res.status(403).json({ error: 'You do not have permission to edit this topic' });
-    }
+      const topic = talkPage.discussions.id(topicId);
+      if (!topic) {
+        return res.status(404).json({ error: 'Topic not found' });
+      }
+      
+      if (!topic.author.equals(req.user._id)) {
+        return res.status(403).json({ error: 'You do not have permission to edit this topic' });
+      }
 
-    Object.assign(topic, req.body);
-    await talkPage.save();
+      Object.assign(topic, req.body);
+      await talkPage.save();
 
-    const user = await User.findById(req.user._id);
+      const user = await User.findById(req.user._id);
 
-    if (!user.contributions.topics.includes(topic._id)) {
-      user.contributions.topics.push(topic._id);
-      await user.save();
+      if (!user.contributions.topics.includes(topic._id)) {
+        user.contributions.topics.push(topic._id);
+        await user.save();
+      }
+      
+      res.status(200).json(topic);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    
-    res.status(200).json(topic);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-};
+];
 
 exports.deleteTopic = async (req, res) => {
   try {
