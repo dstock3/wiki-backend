@@ -77,40 +77,62 @@ exports.getTopicById = async (req, res) => {
   }
 };
 
-exports.createTopic = async (req, res) => {
-  const articleId = req.params.articleId;
-  
-  try {
-    const article = await Article.findById(articleId);
-    if (!article) {
-        return res.status(404).json({ error: 'Article not found' });
+const topicValidationRules = [
+  check('title')
+    .trim()
+    .notEmpty().withMessage('Title is required.')
+    .isLength({ min: 3, max: 100 }).withMessage('Title should be between 3 and 100 characters long.')
+    .escape(),
+  check('content')
+    .trim()
+    .notEmpty().withMessage('Content is required.')
+    .isLength({ min: 10, max: 5000 }).withMessage('Content should be between 10 and 5000 characters long.')
+    .escape()
+];
+
+exports.createTopic = [
+  ...topicValidationRules,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const errorMessage = errors.array().map(err => err.msg).join(', ');
+        return res.status(400).json({ error: errorMessage });
     }
+    
+    const articleId = req.params.articleId;
+    
+    try {
+      const article = await Article.findById(articleId);
+      if (!article) {
+          return res.status(404).json({ error: 'Article not found' });
+      }
 
-    const talkPage = await TalkPage.findById(article.talk);
-    if (!talkPage) {
-        return res.status(404).json({ error: 'TalkPage not found for this article' });
+      const talkPage = await TalkPage.findById(article.talk);
+      if (!talkPage) {
+          return res.status(404).json({ error: 'TalkPage not found for this article' });
+      }
+
+      const newTopic = new Topic({
+        ...req.body,
+        author: req.user._id,
+        talkPage: talkPage._id
+
+      });
+
+      talkPage.discussions.push(newTopic);
+      await talkPage.save();
+
+      const user = await User.findById(req.user._id);
+      user.contributions.topics.push(newTopic._id);
+      await user.save();
+
+      res.status(201).json({ message: "Topic created successfully!" });
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ error: error.message });
     }
-
-    const newTopic = new Topic({
-      ...req.body,
-      author: req.user._id,
-      talkPage: talkPage._id
-
-    });
-
-    talkPage.discussions.push(newTopic);
-    await talkPage.save();
-
-    const user = await User.findById(req.user._id);
-    user.contributions.topics.push(newTopic._id);
-    await user.save();
-
-    res.status(201).json({ message: "Topic created successfully!" });
-  } catch (error) {
-    console.log(error)
-    res.status(500).json({ error: error.message });
   }
-};
+]
 
 exports.updateTopic = async (req, res) => {
   const { talkPageId, topicId } = req.params;
