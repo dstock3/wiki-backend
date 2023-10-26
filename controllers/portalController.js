@@ -1,5 +1,6 @@
 const Portal = require('../model/portal');
 const Article = require('../model/article');
+const { check, validationResult } = require('express-validator');
 
 exports.getAllPortals = async (req, res) => {
     try {

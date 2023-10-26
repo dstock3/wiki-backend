@@ -2,6 +2,7 @@ const Article = require('../model/article');
 const Portal = require('../model/portal');
 const User = require('../model/user').User;
 const TalkPage = require('../model/talk').TalkPage;
+const { check, validationResult } = require('express-validator');
 
 exports.createArticle = async (req, res) => {
     const portalid = req.body.portalid;

@@ -3,22 +3,12 @@ const Topic = require('../model/talk').Topic;
 const Comment = require('../model/talk').Comment;
 const Article = require('../model/article');
 const User = require('../model/user').User;
-const { validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 
 exports.listAllTalkPages = async (req, res) => {
   try {
     const talkPages = await TalkPage.find().populate('articleId');
     res.status(200).json(talkPages);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-exports.createTalkPage = async (req, res) => {
-  try {
-    const newTalkPage = new TalkPage(req.body);
-    const savedTalkPage = await newTalkPage.save();
-    res.status(201).json(savedTalkPage);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
