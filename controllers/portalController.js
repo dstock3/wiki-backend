@@ -60,9 +60,9 @@ const portalValidationRules = [
       .trim()
       .notEmpty().withMessage('Portal description is required.')
       .isLength({ max: 500 }).withMessage('Portal description should not exceed 500 characters.'),
-    check('portalImage.src')
+      check('portalImage.src')
       .if((value, { req }) => req.body.portalImage && req.body.portalImage.src)
-      .isURL().withMessage('Portal image source should be a valid URL.'),
+      .matches(/^data:image\/[a-zA-Z]+;base64,/).withMessage('Portal image source should be a valid Base64 encoded image.'),
     check('portalImage.alt')
       .if((value, { req }) => req.body.portalImage && req.body.portalImage.alt)
       .isLength({ max: 100 }).withMessage('Image alt text should not exceed 100 characters.')
@@ -71,6 +71,7 @@ const portalValidationRules = [
 exports.createPortal = [
     ...portalValidationRules,
     async (req, res) => {
+        console.log(req.body)
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
           const errorMessage = errors.array().map(err => err.msg).join(', ');

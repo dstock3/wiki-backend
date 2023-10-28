@@ -13,7 +13,11 @@ const articleValidationRules = [
     check('content.*.text').trim().notEmpty().withMessage('Content text is required.'),
 
     check('infoBox.title').trim().notEmpty().withMessage('InfoBox title is required.'),
-    check('infoBox.image.src').isURL().withMessage('InfoBox image source should be a valid URL.'),
+
+    check('infoBox.image.src')
+      .if((value, { req }) => req.body.infoBox.image && req.body.infoBox.image.src)
+      .matches(/^data:image\/[a-zA-Z]+;base64,/).withMessage('Article image source should be a valid Base64 encoded image.'),
+    
     check('infoBox.info.*.label').trim().notEmpty().withMessage('InfoBox label is required.'),
 
     check('references.*.name').trim().notEmpty().withMessage('Reference name is required.'),
@@ -23,18 +27,29 @@ const articleValidationRules = [
 ];
 
 exports.createArticle = [
+    async (req, res, next) => {
+        req.body.content = JSON.parse(req.body.content);
+        req.body.infoBox = JSON.parse(req.body.infoBox);
+        req.body.references = JSON.parse(req.body.references);
+        next();
+    },
     ...articleValidationRules,
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessage = errors.array().map(err => err.msg).join(', ');
+
+            logger.warn({
+                action: 'Validation failed for creating article',
+                errorMessage: errorMessage,
+                requestPayload: req.body,
+                userId: req.user ? req.user._id : null
+            });
+            
             return res.status(400).json({ error: errorMessage });
         }
         
         const portalid = req.body.portalid;
-        req.body.content = JSON.parse(req.body.content);
-        req.body.infoBox = JSON.parse(req.body.infoBox);
-        req.body.references = JSON.parse(req.body.references);
 
         try {
             const article = new Article(req.body);
@@ -107,12 +122,27 @@ exports.getArticleById = async (req, res) => {
 };
 
 exports.updateArticle = [
-    ...articleValidationRules,
-    async (req, res) => {
+    async (req, res, next) => {
         req.body.content = JSON.parse(req.body.content);
         req.body.infoBox = JSON.parse(req.body.infoBox);
         req.body.references = JSON.parse(req.body.references);
+        next();
+    },
+    ...articleValidationRules,
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const errorMessage = errors.array().map(err => err.msg).join(', ');
 
+            logger.warn({
+                action: 'Validation failed for updating article',
+                errorMessage: errorMessage,
+                requestPayload: req.body,
+                userId: req.user ? req.user._id : null
+            });
+            
+            return res.status(400).json({ error: errorMessage });
+        }
         try {
             const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
 
