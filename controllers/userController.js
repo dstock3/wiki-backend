@@ -80,8 +80,11 @@ exports.createUser = [
         const field = Object.keys(error.keyPattern)[0]; 
         return res.status(400).json({ error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists.` });
       }
-
-      console.error(error); 
+      logger.error({
+        action: 'Error creating user',
+        errorMessage: error.message
+      });
+      
       res.status(500).json({ error: 'An unexpected error occurred. Please try again.' });
     }
   }
@@ -224,6 +227,13 @@ exports.updateUser = [
       if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
         return res.status(400).json({ errors: [{ msg: 'Updated email already exists in the mailing list.' }] });
       }
+
+      logger.error({
+        action: 'Error updating user',
+        errorMessage: error.message,
+        userId: req.params.userId
+      });
+
       res.status(500).json({ errors: [{ msg: `Error code: ${error.code}. Message: ${error.message}` }] });
     }
   }
@@ -249,6 +259,12 @@ exports.deleteUser = async (req, res) => {
 
     res.status(204).json({ message: 'User deleted successfully' });
   } catch (error) {
+    logger.error({
+      action: 'Error deleting user',
+      errorMessage: error.message,
+      userId: req.params.userId
+    });
+
     res.status(500).json({ error: error.message });
   }
 };

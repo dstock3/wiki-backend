@@ -137,7 +137,14 @@ exports.createTopic = [
 
       res.status(201).json({ message: "Topic created successfully!" });
     } catch (error) {
-      console.log(error)
+      logger.error({
+        action: 'Error creating topic',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        articleId: articleId,
+        userId: req.user ? req.user._id : null
+      });
+
       res.status(500).json({ error: error.message });
     }
   }
@@ -183,6 +190,15 @@ exports.updateTopic = [
       
       res.status(200).json(topic);
     } catch (error) {
+      logger.error({
+        action: 'Error updating topic',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        topicId: topicId,
+        talkPageId: talkPageId,
+        userId: req.user ? req.user._id : null
+      });
+
       res.status(500).json({ error: error.message });
     }
   }
@@ -238,7 +254,15 @@ exports.deleteTopic = async (req, res) => {
 
     res.status(200).json({ message: 'Topic deleted successfully' });
   } catch (error) {
-    console.error("Error in deleteTopic:", error);
+    logger.error({
+      action: 'Error deleting topic',
+      errorMessage: error.message,
+      errorStack: error.stack,
+      topicId: req.params.topicId,
+      articleId: req.params.articleId,
+      userId: req.user ? req.user._id : null
+    });
+    
     res.status(500).json({ error: error.message });
   }
 };
@@ -301,7 +325,15 @@ exports.createComment = [
 
       res.status(201).json({ message: "Comment added successfully!" });
     } catch (error) {
-      console.error("Error Stack Trace:", error.stack);
+      logger.error({
+        action: 'Error creating comment',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        articleId: req.params.articleId,
+        topicId: req.params.topicId,
+        userId: req.user ? req.user._id : null
+      });
+
       res.status(500).json({ error: error.message });
     }
   }
@@ -348,6 +380,15 @@ exports.updateComment = [
 
       res.status(200).json(comment);
     } catch (error) {
+      logger.error({
+        action: 'Error updating comment',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        commentId: req.params.commentId,
+        topicId: req.params.topicId,
+        userId: req.user ? req.user._id : null
+      });
+
       res.status(500).json({ error: error.message });
     }
   }
@@ -394,6 +435,15 @@ exports.deleteComment = async (req, res) => {
 
       res.status(200).json({ message: 'Comment deleted successfully' });
     } catch (error) {
+      logger.error({
+        action: 'Error deleting comment',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        commentId: commentId,
+        topicId: topicId,
+        userId: req.user ? req.user._id : null
+      });
+
       res.status(500).json({ error: error.message });
     }
 };
