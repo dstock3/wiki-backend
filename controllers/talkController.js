@@ -4,6 +4,7 @@ const Comment = require('../model/talk').Comment;
 const Article = require('../model/article');
 const User = require('../model/user').User;
 const { check, validationResult } = require('express-validator');
+const logger = require('../logger');
 
 exports.listAllTalkPages = async (req, res) => {
   try {
@@ -122,6 +123,14 @@ exports.createTopic = [
       talkPage.discussions.push(newTopic);
       await talkPage.save();
 
+      logger.info({
+        action: 'Topic created',
+        topicId: newTopic._id,
+        articleId: article._id,
+        authorId: req.user._id,
+        createdDate: new Date().toISOString()
+      });
+
       const user = await User.findById(req.user._id);
       user.contributions.topics.push(newTopic._id);
       await user.save();
@@ -156,6 +165,14 @@ exports.updateTopic = [
 
       Object.assign(topic, req.body);
       await talkPage.save();
+
+      logger.info({
+        action: 'Topic updated',
+        topicId: topic._id,
+        talkPageId: talkPage._id,
+        authorId: req.user._id,
+        updatedDate: new Date().toISOString()
+      });
 
       const user = await User.findById(req.user._id);
 
@@ -203,6 +220,14 @@ exports.deleteTopic = async (req, res) => {
 
     talkPage.discussions.pull({ _id: topicId });
     await talkPage.save();
+
+    logger.info({
+      action: 'Topic deleted',
+      topicId: topicId,
+      articleId: articleId,
+      deletedBy: req.user._id,
+      deletedDate: new Date().toISOString()
+    });
 
     const user = await User.findById(req.user._id);
     const index = user.contributions.topics.indexOf(topicId);
@@ -262,6 +287,15 @@ exports.createComment = [
       topic.comments.push(commentData);
       await talkPage.save();
 
+      logger.info({
+        action: 'Comment created',
+        commentId: commentData._id,
+        topicId: topic._id,
+        articleId: articleId,
+        authorId: req.user._id,
+        createdDate: new Date().toISOString()
+      });
+
       user.contributions.comments.push(article._id);
       await user.save();
 
@@ -297,6 +331,14 @@ exports.updateComment = [
 
       Object.assign(comment, req.body);
       await talkPage.save();
+
+      logger.info({
+        action: 'Comment updated',
+        commentId: comment._id,
+        topicId: topic._id,
+        authorId: req.user._id,
+        updatedDate: new Date().toISOString()
+      });
 
       const user = await User.findById(req.user._id);
       if (!user.contributions.comments.includes(comment._id)) {
@@ -334,6 +376,14 @@ exports.deleteComment = async (req, res) => {
 
       topic.comments.id(commentId).remove();
       await talkPage.save();
+
+      logger.info({
+        action: 'Comment deleted',
+        commentId: comment._id,
+        topicId: topic._id,
+        authorId: req.user._id,
+        deletedDate: new Date().toISOString()
+      });
       
       const user = await User.findById(req.user._id);
       const index = user.contributions.comments.indexOf(commentId);
