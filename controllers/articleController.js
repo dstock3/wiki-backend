@@ -79,7 +79,6 @@ exports.createArticle = [
                 userId: req.user ? req.user._id : null
             });
 
-            console.error("Error Stack Trace:", error.stack);
             res.status(400).json({ message: error.message });
         }
     }
@@ -96,7 +95,6 @@ exports.getAllArticles = async (req, res) => {
 
 exports.getArticleById = async (req, res) => {
     try {
-        
         const article = await Article.findById(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
@@ -118,6 +116,14 @@ exports.updateArticle = [
         try {
             const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
 
+            logger.info({
+                action: 'Article updated',
+                articleId: article._id,
+                userId: req.user._id,
+                updatedDate: new Date().toISOString(),
+                updatedFields: Object.keys(req.body)
+            });
+
             if (!article) {
                 return res.status(404).json({ message: 'Article not found' });
             }
@@ -131,7 +137,14 @@ exports.updateArticle = [
 
             res.json(article);
         } catch (error) {
-            console.error("Error in updateArticle:", error);
+            logger.error({
+                action: 'Error updating article',
+                errorMessage: error.message,
+                articleId: req.params.articleId,
+                requestPayload: req.body,
+                userId: req.user ? req.user._id : null
+            });
+
             res.status(400).json({ message: error.message });
         }
     }
@@ -143,7 +156,7 @@ exports.deleteArticle = async (req, res) => {
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
-        
+
         await User.updateMany(
             { "contributions.articles": req.params.articleId },
             { $pull: { "contributions.articles": req.params.articleId } }
@@ -154,8 +167,22 @@ exports.deleteArticle = async (req, res) => {
             await talkPage.remove();
         }
 
+        logger.info({
+            action: 'Article deleted',
+            articleId: req.params.articleId,
+            deletedBy: req.user ? req.user._id : null,
+            deletedDate: new Date().toISOString()
+        });
+
         res.json({ message: 'Article deleted successfully' });
     } catch (error) {
+        logger.error({
+            action: 'Error deleting article',
+            errorMessage: error.message,
+            articleId: req.params.articleId,
+            userId: req.user ? req.user._id : null
+        });
+
         res.status(500).json({ message: error.message });
     }
 };
@@ -189,7 +216,6 @@ exports.searchArticles = async (req, res) => {
             totalPages: totalPages
         });
     } catch (error) {
-        console.error("Error during search operation:", error);
         res.status(500).send(error.message);
     }
 };
@@ -235,8 +261,25 @@ exports.updateSection = [
             }
             section.set(req.body);
             await article.save();
+
+            logger.info({
+                action: 'Section updated',
+                articleId: req.params.articleId,
+                sectionId: req.params.sectionId,
+                updatedBy: req.user ? req.user._id : null,
+                updatedDate: new Date().toISOString()
+            });
+
             res.json(section);
         } catch (error) {
+            logger.error({
+                action: 'Error updating section',
+                errorMessage: error.message,
+                articleId: req.params.articleId,
+                sectionId: req.params.sectionId,
+                userId: req.user ? req.user._id : null
+            });
+
             res.status(500).json({ message: error.message });
         }
     }
@@ -254,10 +297,29 @@ exports.deleteSection = async (req, res) => {
         }
         section.remove();
         await article.save();
+
+        logger.info({
+            action: 'Section deleted',
+            articleId: req.params.articleId,
+            sectionId: req.params.sectionId,
+            deletedBy: req.user ? req.user._id : null,
+            deletedDate: new Date().toISOString()
+        });
+
         res.json({ message: 'Section deleted successfully' });
     } catch (error) {
+        logger.error({
+            action: 'Error deleting section',
+            errorMessage: error.message,
+            articleId: req.params.articleId,
+            sectionId: req.params.sectionId,
+            userId: req.user ? req.user._id : null
+        });
+
         res.status(500).json({ message: error.message });
     }
 }
+
+
 
   
