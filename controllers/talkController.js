@@ -218,72 +218,98 @@ exports.deleteTopic = async (req, res) => {
   }
 };
 
-exports.createComment = async (req, res) => {
-  try {
-    const articleId = req.params.articleId;
-    const talkPage = await TalkPage.findOne({ articleId: articleId });
-    const topicId = req.params.topicId;
+const commentValidationRules = [
+  check('content')
+    .trim()
+    .notEmpty().withMessage('Comment content is required.')
+    .escape()
+];
 
-    const article = await Article.findById(articleId);
-    if (!article) {
-        throw new Error('Article not found');
-    }
+exports.createComment = [
+  ...commentValidationRules, 
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+          const errorMessage = errors.array().map(err => err.msg).join(', ');
+          return res.status(400).json({ error: errorMessage });
+      }
+      const articleId = req.params.articleId;
+      const talkPage = await TalkPage.findOne({ articleId: articleId });
+      const topicId = req.params.topicId;
 
-    const user = await User.findById(req.user._id);
-    if (!user) {
-        throw new Error('User not found');
-    }
+      const article = await Article.findById(articleId);
+      if (!article) {
+          throw new Error('Article not found');
+      }
 
-    const topic = talkPage.discussions.id(topicId);
-    if (!topic) {
-        throw new Error('Topic not found');
-    }
+      const user = await User.findById(req.user._id);
+      if (!user) {
+          throw new Error('User not found');
+      }
 
-    const commentData = new Comment({
-      author: user._id,
-      content: req.body.content,
-      topic: topic._id
-    });
-    
-    topic.comments.push(commentData);
-    await talkPage.save();
+      const topic = talkPage.discussions.id(topicId);
+      if (!topic) {
+          throw new Error('Topic not found');
+      }
 
-    user.contributions.comments.push(article._id);
-    await user.save();
+      const commentData = new Comment({
+        author: user._id,
+        content: req.body.content,
+        topic: topic._id
+      });
+      
+      topic.comments.push(commentData);
+      await talkPage.save();
 
-    res.status(201).json({ message: "Comment added successfully!" });
-  } catch (error) {
-    console.error("Error Stack Trace:", error.stack);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.updateComment = async (req, res) => {
-  const { talkPageId, topicId, commentId } = req.params;
-  try {
-    const talkPage = await TalkPage.findById(talkPageId);
-    const topic = talkPage.discussions.id(topicId);
-    const comment = topic.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
-    }
-    if (!comment.author.equals(req.user._id)) {
-      return res.status(403).json({ error: 'You do not have permission to edit this comment' });
-    }
-    Object.assign(comment, req.body);
-    await talkPage.save();
-
-    const user = await User.findById(req.user._id);
-    if (!user.contributions.comments.includes(comment._id)) {
-      user.contributions.comments.push(comment._id);
+      user.contributions.comments.push(article._id);
       await user.save();
-    }
 
-    res.status(200).json(comment);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+      res.status(201).json({ message: "Comment added successfully!" });
+    } catch (error) {
+      console.error("Error Stack Trace:", error.stack);
+      res.status(500).json({ error: error.message });
+    }
   }
-};
+];
+
+exports.updateComment = [
+  ...commentValidationRules,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+          const errorMessage = errors.array().map(err => err.msg).join(', ');
+          return res.status(400).json({ error: errorMessage });
+      }
+
+      const { talkPageId, topicId, commentId } = req.params;
+      const talkPage = await TalkPage.findById(talkPageId);
+      const topic = talkPage.discussions.id(topicId);
+      const comment = topic.comments.id(commentId);
+
+      if (!comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+      if (!comment.author.equals(req.user._id)) {
+        return res.status(403).json({ error: 'You do not have permission to edit this comment' });
+      }
+
+      Object.assign(comment, req.body);
+      await talkPage.save();
+
+      const user = await User.findById(req.user._id);
+      if (!user.contributions.comments.includes(comment._id)) {
+        user.contributions.comments.push(comment._id);
+        await user.save();
+      }
+
+      res.status(200).json(comment);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+];
 
 exports.deleteComment = async (req, res) => {
     const { talkPageId, topicId, commentId } = req.params;
