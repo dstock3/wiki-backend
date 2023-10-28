@@ -3,45 +3,87 @@ const Portal = require('../model/portal');
 const User = require('../model/user').User;
 const TalkPage = require('../model/talk').TalkPage;
 const { check, validationResult } = require('express-validator');
+const logger = require('../logger');
 
-exports.createArticle = async (req, res) => {
-    const portalid = req.body.portalid;
-    req.body.content = JSON.parse(req.body.content);
-    req.body.infoBox = JSON.parse(req.body.infoBox);
-    req.body.references = JSON.parse(req.body.references);
+const articleValidationRules = [
+    check('title').trim().notEmpty().withMessage('Title is required.'),
+    check('intro').trim().notEmpty().withMessage('Intro is required.'),
+    
+    check('content.*.title').trim().notEmpty().withMessage('Content title is required.'),
+    check('content.*.text').trim().notEmpty().withMessage('Content text is required.'),
 
-    try {
-        const article = new Article(req.body);
+    check('infoBox.title').trim().notEmpty().withMessage('InfoBox title is required.'),
+    check('infoBox.image.src').isURL().withMessage('InfoBox image source should be a valid URL.'),
+    check('infoBox.info.*.label').trim().notEmpty().withMessage('InfoBox label is required.'),
 
-        article.author = req.user._id;
-        
-        const talkPage = new TalkPage({
-            articleId: article._id,
-            discussions: []
-        });
-        await talkPage.save();
-        article.talk = talkPage._id;
-        
-        await article.save();
+    check('references.*.name').trim().notEmpty().withMessage('Reference name is required.'),
+    check('references.*.link').isURL().withMessage('Reference link should be a valid URL.'),
 
-        const portal = await Portal.findById(portalid);
-        if (portal) {
-            portal.articles.push(article._id);
-            await portal.save();
-        } else {
-            throw new Error('Portal not found');
+    check('status').optional().isIn(['draft', 'published', 'archived']).withMessage('Invalid article status.')
+];
+
+exports.createArticle = [
+    ...articleValidationRules,
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const errorMessage = errors.array().map(err => err.msg).join(', ');
+            return res.status(400).json({ error: errorMessage });
         }
-
-        const user = await User.findById(req.user._id);
-        user.contributions.articles.push(article._id);
-        await user.save();
         
-        res.status(201).json(article);
-    } catch (error) {
-        console.error("Error Stack Trace:", error.stack);
-        res.status(400).json({ message: error.message });
+        const portalid = req.body.portalid;
+        req.body.content = JSON.parse(req.body.content);
+        req.body.infoBox = JSON.parse(req.body.infoBox);
+        req.body.references = JSON.parse(req.body.references);
+
+        try {
+            const article = new Article(req.body);
+            article.author = req.user._id;
+            
+            const talkPage = new TalkPage({
+                articleId: article._id,
+                discussions: []
+            });
+            await talkPage.save();
+            article.talk = talkPage._id;
+            
+            await article.save();
+
+            const portal = await Portal.findById(portalid);
+            if (portal) {
+                portal.articles.push(article._id);
+                await portal.save();
+
+                logger.info({
+                    action: 'Article created',
+                    articleId: article._id,
+                    portalId: portalid,
+                    userId: req.user._id,
+                    createdDate: new Date().toISOString()
+                });
+            } else {
+                throw new Error('Portal not found');
+            }
+
+            const user = await User.findById(req.user._id);
+            user.contributions.articles.push(article._id);
+            await user.save();
+            
+            res.status(201).json(article);
+        } catch (error) {
+            logger.error({
+                action: 'Error creating article',
+                errorMessage: error.message,
+                portalId: portalid,
+                requestPayload: req.body,
+                userId: req.user ? req.user._id : null
+            });
+
+            console.error("Error Stack Trace:", error.stack);
+            res.status(400).json({ message: error.message });
+        }
     }
-};
+];
 
 exports.getAllArticles = async (req, res) => {
     try {
@@ -66,31 +108,34 @@ exports.getArticleById = async (req, res) => {
     }
 };
 
-exports.updateArticle = async (req, res) => {
-    req.body.content = JSON.parse(req.body.content);
-    req.body.infoBox = JSON.parse(req.body.infoBox);
-    req.body.references = JSON.parse(req.body.references);
+exports.updateArticle = [
+    ...articleValidationRules,
+    async (req, res) => {
+        req.body.content = JSON.parse(req.body.content);
+        req.body.infoBox = JSON.parse(req.body.infoBox);
+        req.body.references = JSON.parse(req.body.references);
 
-    try {
-        const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
+        try {
+            const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
 
-        if (!article) {
-            return res.status(404).json({ message: 'Article not found' });
+            if (!article) {
+                return res.status(404).json({ message: 'Article not found' });
+            }
+
+            const user = await User.findById(req.user._id);
+
+            if (!user.contributions.articles.includes(article._id)) {
+                user.contributions.articles.push(article._id);
+                await user.save();
+            }
+
+            res.json(article);
+        } catch (error) {
+            console.error("Error in updateArticle:", error);
+            res.status(400).json({ message: error.message });
         }
-
-        const user = await User.findById(req.user._id);
-
-        if (!user.contributions.articles.includes(article._id)) {
-            user.contributions.articles.push(article._id);
-            await user.save();
-        }
-
-        res.json(article);
-    } catch (error) {
-        console.error("Error in updateArticle:", error);
-        res.status(400).json({ message: error.message });
     }
-};
+];
 
 exports.deleteArticle = async (req, res) => {
     try {
@@ -165,27 +210,37 @@ exports.getSection = async (req, res) => {
     }
 }
 
-exports.updateSection = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const article = await Article.findById(req.params.articleId);
-        if (!article) {
-            return res.status(404).json({ message: 'Article not found' });
+const sectionValidationRules = [
+    check('title').trim().notEmpty().withMessage('Section title is required.'),
+    check('text').trim().notEmpty().withMessage('Section text is required.'),
+    check('image.src').isURL().withMessage('Section image source should be a valid URL.'),
+    check('image.alt').trim().isLength({ max: 100 }).withMessage('Image alt text should not exceed 100 characters.')
+];
+
+exports.updateSection = [
+    ...sectionValidationRules,
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
-        const section = article.content.id(req.params.sectionId);
-        if (!section) {
-            return res.status(404).json({ message: 'Section not found' });
+        try {
+            const article = await Article.findById(req.params.articleId);
+            if (!article) {
+                return res.status(404).json({ message: 'Article not found' });
+            }
+            const section = article.content.id(req.params.sectionId);
+            if (!section) {
+                return res.status(404).json({ message: 'Section not found' });
+            }
+            section.set(req.body);
+            await article.save();
+            res.json(section);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
-        section.set(req.body);
-        await article.save();
-        res.json(section);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
-}
+];
 
 exports.deleteSection = async (req, res) => {
     try {
