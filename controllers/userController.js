@@ -246,6 +246,10 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if (req.user.username !== user.username) {
+      return res.status(403).json({ error: 'You are not authorized to perform this action' });
+    }
+
     await MailingList.findOneAndDelete({ email: user.email });
 
     await User.findByIdAndDelete(req.params.userId);
