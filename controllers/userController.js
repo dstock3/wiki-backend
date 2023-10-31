@@ -149,13 +149,36 @@ exports.getUserById = async (req, res) => {
 
 exports.getUserByUsername = async (req, res) => {
   try {
-    const user = await User.findOne({ username: req.params.username }, '-password');
+    const user = await User.findOne({ username: req.params.username }, '-password')
+      .populate('contributions.articles')
+      .populate('contributions.topics')
+      .populate('contributions.comments');
+
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const isOwnProfile = req.user && req.user.username === req.params.username;
 
-    res.status(200).json({ user, isOwnProfile });
+    const modifiedArticles = await Promise.all(user.contributions.articles.map(async (article) => {
+      const portal = await Portal.findOne({ articles: article._id });
+      return {
+        ...article._doc, 
+        portalId: portal ? portal._id.toString() : null
+      };
+    }));
+
+    res.status(200).json({
+      user: {
+        ...user._doc,
+        contributions: {
+          ...user._doc.contributions,
+          articles: modifiedArticles
+        }
+      },
+      isOwnProfile
+    });
+
   } catch (error) {
+    console.error('Error:', error);
     res.status(500).json({ error: error.message });
   }
 };
