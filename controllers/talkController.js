@@ -153,10 +153,10 @@ exports.createTopic = [
 exports.updateTopic = [
   ...topicValidationRules,
   async (req, res) => {
-    const { talkPageId, topicId } = req.params;
+    const { articleId, topicId } = req.params;
     try {
-      const talkPage = await TalkPage.findById(talkPageId);
-      
+      const talkPage = await TalkPage.findOne({ articleId: articleId });
+
       if (!talkPage) {
         return res.status(404).json({ error: 'TalkPage not found' });
       }
