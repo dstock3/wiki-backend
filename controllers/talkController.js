@@ -55,7 +55,9 @@ exports.getTalkPage = async (req, res) => {
     talkPage.articleAuthorId = article.author.toString();
     talkPage.currentUserId = currentUserId;
 
-    res.status(200).json({talkPage});
+    const isAuthorized = req.user ? true : false;
+
+    res.status(200).json({ talkPage, isAuthorized });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
