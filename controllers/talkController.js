@@ -43,6 +43,7 @@ exports.getTalkPage = async (req, res) => {
       topic.isAuthorized = currentUserId && topicAuthorId === currentUserId;
       topic.comments.forEach(comment => {
         const commentAuthorId = comment.author.toString();
+        comment.authorId = commentAuthorId;
         comment.author = userMap[comment.author];
         comment.isAuthorized = currentUserId && commentAuthorId === currentUserId;
       });
@@ -54,7 +55,7 @@ exports.getTalkPage = async (req, res) => {
     talkPage.articleAuthorId = article.author.toString();
     talkPage.currentUserId = currentUserId;
 
-    res.status(200).json(talkPage);
+    res.status(200).json({talkPage});
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
