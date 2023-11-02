@@ -51,7 +51,10 @@ exports.getTalkPage = async (req, res) => {
     const article = await Article.findById(req.params.articleId).lean();
     talkPage.articleTitle = article.title;
 
-    res.status(200).json({talkPage, isAuthorized: Boolean(currentUserId)});
+    talkPage.articleAuthorId = article.author.toString();
+    talkPage.currentUserId = currentUserId;
+
+    res.status(200).json(talkPage);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
@@ -358,6 +361,7 @@ exports.updateComment = [
         return res.status(404).json({ error: 'Comment not found' });
       }
       if (!comment.author.equals(req.user._id)) {
+        //only the author of the comment can edit it
         return res.status(403).json({ error: 'You do not have permission to edit this comment' });
       }
 
@@ -406,6 +410,7 @@ exports.deleteComment = async (req, res) => {
       let isAuthorized = false;
 
       if (req.user) {
+        //currently, the article author can delete any comment on their article
         if ((req.user._id.equals(articleAuthor)) | (req.user._id.equals(comment.author))) {
           isAuthorized = true;
         }
