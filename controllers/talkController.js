@@ -400,56 +400,64 @@ exports.updateComment = [
 ];
 
 exports.deleteComment = async (req, res) => {
-    const { talkPageId, topicId, commentId } = req.params;
-    try {
-      const talkPage = await TalkPage.findById(talkPageId);
-      const articleId = talkPage.articleId;
-      const articleAuthor = await Article.findById(articleId).author;
-      const topic = talkPage.discussions.id(topicId);
-      const comment = topic.comments.id(commentId);
+  const { articleId, topicId, commentId } = req.params;
 
-      let isAuthorized = false;
+  try {
+    const talkPage = await TalkPage.findOne({ 'discussions._id': topicId });
+    const article = await Article.findById(articleId);
+    const articleAuthor = article.author;
+    const topic = talkPage.discussions.id(topicId);
+    const comment = topic.comments.id(commentId);
 
-      if (req.user) {
-        //currently, the article author can delete any comment on their article
-        if ((req.user._id.equals(articleAuthor)) | (req.user._id.equals(comment.author))) {
-          isAuthorized = true;
-        }
+    let isAuthorized = false;
+
+    if (req.user) {
+      if (req.user._id.equals(articleAuthor) || (comment && req.user._id.equals(comment.author))) {
+        isAuthorized = true;
       }
+    }
 
-      if (!isAuthorized) {
-        return res.status(403).json({ error: 'You do not have permission to delete this comment' });
-      }
+    if (!isAuthorized) {
+      return res.status(403).json({ error: 'You do not have permission to delete this comment' });
+    }
 
-      topic.comments.id(commentId).remove();
+    if (comment) {
+      topic.comments.pull({ _id: commentId }); 
       await talkPage.save();
+    } else {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
 
-      logger.info({
-        action: 'Comment deleted',
-        commentId: comment._id,
-        topicId: topic._id,
-        authorId: req.user._id,
-        deletedDate: new Date().toISOString()
-      });
-      
-      const user = await User.findById(req.user._id);
-      const index = user.contributions.comments.indexOf(commentId);
+
+    logger.info({
+      action: 'Comment deleted',
+      commentId: comment._id,
+      topicId: topic._id,
+      authorId: req.user._id,
+      deletedDate: new Date().toISOString()
+    });
+
+
+    const user = await User.findById(req.user._id);
+    if (user) {
+      const index = user.contributions.comments.indexOf(commentId.toString()); 
       if (index > -1) {
         user.contributions.comments.splice(index, 1);
         await user.save();
       }
-
-      res.status(200).json({ message: 'Comment deleted successfully' });
-    } catch (error) {
-      logger.error({
-        action: 'Error deleting comment',
-        errorMessage: error.message,
-        errorStack: error.stack,
-        commentId: commentId,
-        topicId: topicId,
-        userId: req.user ? req.user._id : null
-      });
-
-      res.status(500).json({ error: error.message });
     }
+
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    logger.error({
+      action: 'Error deleting comment',
+      errorMessage: error.message,
+      errorStack: error.stack,
+      commentId: commentId,
+      topicId: topicId,
+      userId: req.user ? req.user._id : null
+    });
+
+    res.status(500).json({ error: error.message });
+  }
 };
