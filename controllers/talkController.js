@@ -356,7 +356,7 @@ exports.updateComment = [
       }
 
       const { articleId, topicId, commentId } = req.params;
-      
+      // Find the talk page and the specific comment
       const talkPage = await TalkPage.findOne({ articleId: articleId });
       if (!talkPage) {
         return res.status(404).json({ error: 'TalkPage not found' });
