@@ -351,20 +351,28 @@ exports.updateComment = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-          const errorMessage = errors.array().map(err => err.msg).join(', ');
-          return res.status(400).json({ error: errorMessage });
+        const errorMessage = errors.array().map(err => err.msg).join(', ');
+        return res.status(400).json({ error: errorMessage });
       }
 
-      const { talkPageId, topicId, commentId } = req.params;
-      const talkPage = await TalkPage.findById(talkPageId);
-      const topic = talkPage.discussions.id(topicId);
-      const comment = topic.comments.id(commentId);
+      const { articleId, topicId, commentId } = req.params;
+      
+      const talkPage = await TalkPage.findOne({ articleId: articleId });
+      if (!talkPage) {
+        return res.status(404).json({ error: 'TalkPage not found' });
+      }
 
+      const topic = talkPage.discussions.id(topicId);
+      if (!topic) {
+        return res.status(404).json({ error: 'Topic not found' });
+      }
+
+      const comment = topic.comments.id(commentId);
       if (!comment) {
         return res.status(404).json({ error: 'Comment not found' });
       }
+
       if (!comment.author.equals(req.user._id)) {
-        //only the author of the comment can edit it
         return res.status(403).json({ error: 'You do not have permission to edit this comment' });
       }
 
@@ -385,14 +393,23 @@ exports.updateComment = [
         await user.save();
       }
 
-      res.status(200).json(comment);
+      const populatedTalkPage = await TalkPage.findOne({ _id: talkPage._id })
+        .populate('discussions.comments.author', 'username');
+
+      const populatedTopic = populatedTalkPage.discussions.id(topicId);
+      const populatedComment = populatedTopic.comments.id(commentId);
+
+      res.status(200).json({
+        ...populatedComment.toObject(),
+        author: populatedComment.author.username 
+      });
     } catch (error) {
       logger.error({
         action: 'Error updating comment',
         errorMessage: error.message,
         errorStack: error.stack,
-        commentId: req.params.commentId,
-        topicId: req.params.topicId,
+        commentId: commentId,
+        topicId: topicId,
         userId: req.user ? req.user._id : null
       });
 
