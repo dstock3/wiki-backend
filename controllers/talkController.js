@@ -5,6 +5,7 @@ const Article = require('../model/article');
 const User = require('../model/user').User;
 const { check, validationResult } = require('express-validator');
 const logger = require('../logger');
+const sanitize = require('../util/sanitize');
 
 exports.listAllTalkPages = async (req, res) => {
   try {
@@ -88,13 +89,11 @@ const topicValidationRules = [
   check('title')
     .trim()
     .notEmpty().withMessage('Title is required.')
-    .isLength({ min: 3, max: 100 }).withMessage('Title should be between 3 and 100 characters long.')
-    .escape(),
+    .isLength({ min: 3, max: 100 }).withMessage('Title should be between 3 and 100 characters long.'),
   check('content')
     .trim()
     .notEmpty().withMessage('Content is required.')
     .isLength({ min: 10, max: 5000 }).withMessage('Content should be between 10 and 5000 characters long.')
-    .escape()
 ];
 
 exports.createTopic = [
@@ -102,28 +101,29 @@ exports.createTopic = [
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const errorMessage = errors.array().map(err => err.msg).join(', ');
-        return res.status(400).json({ error: errorMessage });
+      const errorMessage = errors.array().map(err => err.msg).join(', ');
+      return res.status(400).json({ error: errorMessage });
     }
 
-    const articleId = req.params.articleId;
-    
+    const sanitizedContent = sanitize(req.body.content);
+
     try {
-      const article = await Article.findById(articleId);
+
+      const article = await Article.findById(req.params.articleId);
       if (!article) {
-          return res.status(404).json({ error: 'Article not found' });
+        return res.status(404).json({ error: 'Article not found' });
       }
 
       const talkPage = await TalkPage.findById(article.talk);
       if (!talkPage) {
-          return res.status(404).json({ error: 'TalkPage not found for this article' });
+        return res.status(404).json({ error: 'TalkPage not found for this article' });
       }
 
       const newTopic = new Topic({
-        ...req.body,
+        title: req.body.title,
+        content: sanitizedContent,
         author: req.user._id,
         talkPage: talkPage._id
-
       });
 
       talkPage.discussions.push(newTopic);
@@ -147,14 +147,14 @@ exports.createTopic = [
         action: 'Error creating topic',
         errorMessage: error.message,
         errorStack: error.stack,
-        articleId: articleId,
+        articleId: req.params.articleId,
         userId: req.user ? req.user._id : null
       });
 
       res.status(500).json({ error: error.message });
     }
   }
-]
+];
 
 exports.updateTopic = [
   ...topicValidationRules,
@@ -175,8 +175,13 @@ exports.updateTopic = [
       if (!topic.author.equals(req.user._id)) {
         return res.status(403).json({ error: 'You do not have permission to edit this topic' });
       }
+      const sanitizedContent = sanitizeContent(req.body.content);
+      const updatedData = {
+        ...req.body,
+        content: sanitizedContent
+      };
 
-      Object.assign(topic, req.body);
+      Object.assign(topic, updatedData);
       await talkPage.save();
 
       logger.info({
@@ -277,7 +282,6 @@ const commentValidationRules = [
   check('content')
     .trim()
     .notEmpty().withMessage('Comment content is required.')
-    .escape()
 ];
 
 exports.createComment = [
@@ -308,10 +312,12 @@ exports.createComment = [
           throw new Error('Topic not found');
       }
 
+      const sanitizedContent = sanitize(req.body.content);
+
       const commentData = new Comment({
         author: user._id,
         authorName: user.username,
-        content: req.body.content,
+        content: sanitizedContent,
         topic: topic._id,
         date: new Date()
       });
@@ -367,7 +373,7 @@ exports.updateComment = [
       }
 
       const { articleId, topicId, commentId } = req.params;
-      // Find the talk page and the specific comment
+
       const talkPage = await TalkPage.findOne({ articleId: articleId });
       if (!talkPage) {
         return res.status(404).json({ error: 'TalkPage not found' });
@@ -387,7 +393,14 @@ exports.updateComment = [
         return res.status(403).json({ error: 'You do not have permission to edit this comment' });
       }
 
-      Object.assign(comment, req.body);
+      const sanitizedContent = sanitizeContent(req.body.content);
+
+      const updatedData = {
+        ...req.body,
+        content: sanitizedContent
+      };
+
+      Object.assign(comment, updatedData);
       await talkPage.save();
 
       logger.info({

@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
 const logger = require('../logger');
 NAME = process.env.SESSION_NAME;
+const sanitize = require('../util/sanitize');
 
 const userValidationRules = [
   check('username')
@@ -150,7 +151,7 @@ exports.getUserById = async (req, res) => {
 exports.getUserByUsername = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }, '-password')
-      .populate('contributions.articles')
+      .populate('contributions.articles', 'title')
       .populate('contributions.topics')
       .populate('contributions.comments');
 
@@ -158,20 +159,15 @@ exports.getUserByUsername = async (req, res) => {
 
     const isOwnProfile = req.user && req.user.username === req.params.username;
 
-    const modifiedArticles = await Promise.all(user.contributions.articles.map(async (article) => {
-      const portal = await Portal.findOne({ articles: article._id });
-      return {
-        ...article._doc, 
-        portalId: portal ? portal._id.toString() : null
-      };
-    }));
-
     res.status(200).json({
       user: {
         ...user._doc,
         contributions: {
           ...user._doc.contributions,
-          articles: modifiedArticles
+          articles: user.contributions.articles.map(article => ({
+            _id: article._id,
+            title: article.title
+          }))
         }
       },
       isOwnProfile
@@ -207,7 +203,6 @@ const updateUserValidationRules = [
     .optional()
     .trim()
     .isLength({ max: 500 }).withMessage('Your bio should not exceed 500 characters.')
-    .escape()
 ];
 
 exports.updateUser = [
@@ -236,6 +231,10 @@ exports.updateUser = [
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         req.body.password = hashedPassword;
+      }
+
+      if (req.body.bio) {
+        req.body.bio = sanitize(req.body.bio);
       }
 
       const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true, select: '-password' });
