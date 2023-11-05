@@ -310,8 +310,10 @@ exports.createComment = [
 
       const commentData = new Comment({
         author: user._id,
+        authorName: user.username,
         content: req.body.content,
-        topic: topic._id
+        topic: topic._id,
+        date: new Date()
       });
       
       topic.comments.push(commentData);
@@ -329,7 +331,16 @@ exports.createComment = [
       user.contributions.comments.push(article._id);
       await user.save();
 
-      res.status(201).json({ message: "Comment added successfully!" });
+      res.status(201).json({
+        message: "Comment added successfully!",
+        comment: {
+          _id: commentData._id,
+          content: commentData.content,
+          authorId: user._id,
+          author: user.username,
+          date: commentData.date.toISOString()
+        }
+      });
     } catch (error) {
       logger.error({
         action: 'Error creating comment',
