@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 // Contribution Schema for storing user's contributions
 const ContributionSchema = new mongoose.Schema({
@@ -43,7 +44,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  contributions: ContributionSchema
+  contributions: ContributionSchema,
+  failedLoginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  lockUntil: {
+    type: Date,
+  }
 });
 
 const MailingListSchema = new mongoose.Schema({
@@ -53,6 +61,14 @@ const MailingListSchema = new mongoose.Schema({
     required: true
   }
 });
+
+UserSchema.virtual('isLocked').get(function() {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
+
+UserSchema.methods.comparePassword = function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = {
   User: mongoose.model('User', UserSchema),

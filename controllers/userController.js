@@ -7,6 +7,10 @@ const { check, validationResult } = require('express-validator');
 const logger = require('../logger');
 NAME = process.env.SESSION_NAME;
 const sanitize = require('../util/sanitize');
+require('dotenv').config();
+
+const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5;
+const LOCK_TIME = parseInt(process.env.LOCK_TIME, 10) || 2 * 60 * 60 * 1000; 
 
 const userValidationRules = [
   check('username')
@@ -92,9 +96,39 @@ exports.createUser = [
 ];
 
 exports.loginUser = async (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);
-    if (!user) return res.status(400).json({ error: info.message });
+  try {
+    const user = await User.findOne({ username: req.body.username });
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    if (user.isLocked) {
+      return res.status(403).json({ error: "Account is temporarily locked" });
+    }
+
+    const isMatch = await user.comparePassword(req.body.password);
+
+    if (isMatch) {
+      if (user.failedLoginAttempts !== 0 || user.lockUntil !== null) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save();
+      }
+    } else {
+      user.failedLoginAttempts += 1;
+      
+      if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
+        user.lockUntil = new Date(Date.now() + LOCK_TIME);
+      }
+      
+      await user.save();
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
 
     req.logIn(user, (err) => {
       if (err) return next(err);
@@ -103,7 +137,10 @@ exports.loginUser = async (req, res, next) => {
         username: user.username
       });
     });
-  })(req, res, next);
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'An error occurred during the login process' });
+  }
 };
 
 exports.logoutUser = (req, res) => {
