@@ -3,6 +3,7 @@ const Portal = require('../model/portal');
 const User = require('../model/user').User;
 const TalkPage = require('../model/talk').TalkPage;
 const { check, validationResult } = require('express-validator');
+const sanitizeContent = require('../util/sanitize');
 const logger = require('../logger');
 
 const articleValidationRules = [
@@ -31,6 +32,8 @@ exports.createArticle = [
         req.body.content = JSON.parse(req.body.content);
         req.body.infoBox = JSON.parse(req.body.infoBox);
         req.body.references = JSON.parse(req.body.references);
+
+        req.body.content = sanitizeContent(req.body.content);
         next();
     },
     ...articleValidationRules,

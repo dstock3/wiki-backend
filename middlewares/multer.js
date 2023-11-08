@@ -1,5 +1,6 @@
 const multer = require('multer');
 const path = require('path');
+const logger = require('../logger');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -31,6 +32,12 @@ const upload = multer({
 const uploadMiddleware = (req, res, next) => {
   upload.single('image')(req, res, function(err) {
     if (err) {
+      logger.warn({
+        action: 'Image Upload Failed',
+        errorMessage: err.message,
+        fileType: req.file ? req.file.mimetype : null,
+        userId: req.user ? req.user._id : null
+      });
       return res.status(400).json({ error: err.message });
     }
     next();
