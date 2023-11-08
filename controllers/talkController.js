@@ -5,7 +5,7 @@ const Article = require('../model/article');
 const User = require('../model/user').User;
 const { check, validationResult } = require('express-validator');
 const logger = require('../logger');
-const sanitize = require('../util/sanitize');
+const sanitizeContent = require('../util/sanitize');
 
 exports.listAllTalkPages = async (req, res) => {
   try {
@@ -160,9 +160,9 @@ exports.updateTopic = [
   ...topicValidationRules,
   async (req, res) => {
     const { articleId, topicId } = req.params;
+    const talkPage = await TalkPage.findOne({ articleId: articleId });
+    
     try {
-      const talkPage = await TalkPage.findOne({ articleId: articleId });
-
       if (!talkPage) {
         return res.status(404).json({ error: 'TalkPage not found' });
       }
@@ -206,7 +206,7 @@ exports.updateTopic = [
         errorMessage: error.message,
         errorStack: error.stack,
         topicId: topicId,
-        talkPageId: talkPageId,
+        talkPageId: talkPage._id,
         userId: req.user ? req.user._id : null
       });
 
