@@ -15,6 +15,7 @@ const articleRoutes = require('./routes/articleRoutes');
 const portalRoutes = require('./routes/portalRoutes');
 const talkRoutes = require('./routes/talkRoutes');
 const userRoutes = require('./routes/userRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 SECRET = process.env.SECRET_KEY;
 NAME = process.env.SESSION_NAME;
@@ -72,6 +73,7 @@ app.use('/articles', apiLimiter, articleRoutes);
 app.use('/portals', apiLimiter, portalRoutes);
 app.use('/talk', apiLimiter, talkRoutes);
 app.use('/users', apiLimiter, userRoutes);
+app.use('/contact', apiLimiter, contactRoutes);
 
 app.use((req, res, next) => {
   const error = new Error('Not Found');

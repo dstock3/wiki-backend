@@ -5,9 +5,10 @@ const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
 const logger = require('../logger');
+require('dotenv').config();
 NAME = process.env.SESSION_NAME;
 const sanitize = require('../util/sanitize');
-require('dotenv').config();
+
 
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5;
 const LOCK_TIME = parseInt(process.env.LOCK_TIME, 10) || 2 * 60 * 60 * 1000; 
