@@ -33,7 +33,12 @@ exports.createArticle = [
         req.body.infoBox = JSON.parse(req.body.infoBox);
         req.body.references = JSON.parse(req.body.references);
 
-        req.body.content = sanitizeContent(req.body.content);
+        req.body.content.forEach(contentItem => {
+            if (contentItem.text) {
+                contentItem.text = sanitizeContent(contentItem.text);
+            }
+        });
+
         next();
     },
     ...articleValidationRules,
@@ -130,7 +135,11 @@ exports.updateArticle = [
         req.body.infoBox = JSON.parse(req.body.infoBox);
         req.body.references = JSON.parse(req.body.references);
 
-        req.body.content = sanitizeContent(req.body.content);
+        req.body.content.forEach(contentItem => {
+            if (contentItem.text) {
+                contentItem.text = sanitizeContent(contentItem.text);
+            }
+        });
         next();
     },
     ...articleValidationRules,
@@ -274,8 +283,13 @@ exports.getSection = async (req, res) => {
 const sectionValidationRules = [
     check('title').trim().notEmpty().withMessage('Section title is required.'),
     check('text').trim().notEmpty().withMessage('Section text is required.'),
-    check('image.src').isURL().withMessage('Section image source should be a valid URL.'),
-    check('image.alt').trim().isLength({ max: 100 }).withMessage('Image alt text should not exceed 100 characters.')
+    
+    check('image.src')
+      .if((value, { req }) => req.body.image && req.body.image.src)
+      .matches(/^data:image\/[a-zA-Z]+;base64,|[a-zA-Z]+:\/\/.+/)
+      .withMessage('Section image source should be a valid URL or a Base64 encoded image.'),
+
+    check('image.alt').optional().trim().isLength({ max: 100 }).withMessage('Image alt text should not exceed 100 characters.')
 ];
 
 exports.updateSection = [
@@ -294,7 +308,8 @@ exports.updateSection = [
             if (!section) {
                 return res.status(404).json({ message: 'Section not found' });
             }
-            req.body = sanitizeContent(req.body);
+            req.body.text = sanitizeContent(req.body.text);
+            console.log(req.body);
             section.set(req.body);
             await article.save();
 

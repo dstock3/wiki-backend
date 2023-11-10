@@ -11,7 +11,7 @@ router.get('/search', articleController.searchArticles);
 router.get('/:articleId/:sectionId', articleController.getSection);
 router.get('/:articleId', articleController.getArticleById);
 router.post('/', ensureAuthenticated, csrfProtection, uploadMiddleware, articleController.createArticle);
-router.put('/:articleId/:sectionId', ensureAuthenticated, csrfProtection, articleController.updateSection);
+router.put('/:articleId/:sectionId', ensureAuthenticated, csrfProtection, uploadMiddleware, articleController.updateSection);
 router.delete('/:articleId/:sectionId', ensureAuthenticated, csrfProtection, articleController.deleteSection);
 router.put('/:articleId', ensureAuthenticated, csrfProtection, uploadMiddleware, articleController.updateArticle);
 router.delete('/:articleId', ensureAuthenticated, csrfProtection, articleController.deleteArticle);
