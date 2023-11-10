@@ -309,7 +309,6 @@ exports.updateSection = [
                 return res.status(404).json({ message: 'Section not found' });
             }
             req.body.text = sanitizeContent(req.body.text);
-            console.log(req.body);
             section.set(req.body);
             await article.save();
 

@@ -105,7 +105,7 @@ exports.createTopic = [
       return res.status(400).json({ error: errorMessage });
     }
 
-    const sanitizedContent = sanitize(req.body.content);
+    const sanitizedContent = sanitizeContent(req.body.content);
 
     try {
 
