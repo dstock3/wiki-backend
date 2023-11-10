@@ -129,6 +129,8 @@ exports.updateArticle = [
         req.body.content = JSON.parse(req.body.content);
         req.body.infoBox = JSON.parse(req.body.infoBox);
         req.body.references = JSON.parse(req.body.references);
+
+        req.body.content = sanitizeContent(req.body.content);
         next();
     },
     ...articleValidationRules,
@@ -292,6 +294,7 @@ exports.updateSection = [
             if (!section) {
                 return res.status(404).json({ message: 'Section not found' });
             }
+            req.body = sanitizeContent(req.body);
             section.set(req.body);
             await article.save();
 
