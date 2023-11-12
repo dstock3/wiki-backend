@@ -51,7 +51,11 @@ const UserSchema = new mongoose.Schema({
   },
   lockUntil: {
     type: Date,
-  }
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
 });
 
 const MailingListSchema = new mongoose.Schema({
