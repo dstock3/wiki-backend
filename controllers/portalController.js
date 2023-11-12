@@ -46,7 +46,6 @@ exports.getArticlesByPortalId = async (req, res) => {
         if (!portal) {
             return res.status(404).json({ message: 'Portal not found' });
         }
-        console.log(portal.articles)
         res.json(portal.articles);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -73,7 +72,6 @@ const portalValidationRules = [
 exports.createPortal = [
     ...portalValidationRules,
     async (req, res) => {
-        console.log(req.body)
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
           const errorMessage = errors.array().map(err => err.msg).join(', ');
@@ -166,7 +164,6 @@ exports.updatePortal = [
             });
 
             console.error("Error:", err.message, err.stack);
-            
             res.status(500).json({ error: err.message });
         }
     }
