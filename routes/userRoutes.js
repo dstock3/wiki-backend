@@ -20,6 +20,7 @@ router.get('/', userController.getAllUsers);
 router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
 router.get('/status', userController.checkAuthenticationStatus);
+router.get('/admin', ensureAuthenticated, userController.checkAdmin);
 router.get('/:userId', userController.getUserById);
 router.get('/username/:username', userController.getUserByUsername);
 router.put('/:userId', ensureAuthenticated, csrfProtection, userController.updateUser);

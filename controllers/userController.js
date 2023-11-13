@@ -9,7 +9,6 @@ require('dotenv').config();
 NAME = process.env.SESSION_NAME;
 const sanitize = require('../util/sanitize');
 
-
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5;
 const LOCK_TIME = parseInt(process.env.LOCK_TIME, 10) || 2 * 60 * 60 * 1000; 
 
@@ -164,6 +163,14 @@ exports.checkAuthenticationStatus = (req, res) => {
     });
   } else {
     res.status(200).json({ isAuthenticated: false });
+  }
+};
+
+exports.checkAdmin = (req, res) => {
+  if (req.user && req.user.isAdmin) {
+      res.status(200).json({ isAdmin: true });
+  } else {
+      res.status(403).json({ isAdmin: false, error: 'Access denied' });
   }
 };
 
