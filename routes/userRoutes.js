@@ -15,13 +15,19 @@ router.get('/get-csrf-token', csrfProtection, (req, res) => {
     }
 });
 
+// User Routes
 router.post('/', userController.createUser);
 router.get('/', userController.getAllUsers);
 router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
 router.get('/status', userController.checkAuthenticationStatus);
+
+// Admin Routes
+router.delete('/admin/:userId', ensureAuthenticated, ensureAdmin, userController.adminDeleteUser);
 router.get('/admin/manage', ensureAuthenticated, ensureAdmin, userController.adminGetUsers);
 router.get('/admin', ensureAuthenticated, userController.checkAdmin);
+
+// Parameterized User Routes
 router.get('/:userId', userController.getUserById);
 router.get('/username/:username', userController.getUserByUsername);
 router.put('/:userId', ensureAuthenticated, csrfProtection, userController.updateUser);

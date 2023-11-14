@@ -349,3 +349,23 @@ exports.adminGetUsers = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while fetching users.' });
   }
 };
+
+exports.adminDeleteUser = async (req, res) => {
+  try {
+      const userId = req.params.userId;
+      const user = await User.findById(userId);
+
+      if (!user) {
+          return res.status(404).json({ error: 'User not found.' });
+      }
+
+      await User.deleteOne({ _id: userId });
+
+      logger.info(`User ${user.username} deleted by admin ${req.user.username}`);
+
+      res.status(200).json({ message: `User ${user.username} successfully deleted.` });
+  } catch (error) {
+      logger.error(`Admin delete user error: ${error.message}`);
+      res.status(500).json({ error: 'Error deleting user. Please try again later.' });
+  }
+};
