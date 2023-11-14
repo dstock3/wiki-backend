@@ -166,14 +166,6 @@ exports.checkAuthenticationStatus = (req, res) => {
   }
 };
 
-exports.checkAdmin = (req, res) => {
-  if (req.user && req.user.isAdmin) {
-      res.status(200).json({ isAdmin: true });
-  } else {
-      res.status(403).json({ isAdmin: false, error: 'Access denied' });
-  }
-};
-
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -337,5 +329,23 @@ exports.deleteUser = async (req, res) => {
     });
 
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.checkAdmin = (req, res) => {
+  if (req.user && req.user.isAdmin) {
+      res.status(200).json({ isAdmin: true });
+  } else {
+      res.status(403).json({ isAdmin: false, error: 'Access denied' });
+  }
+};
+
+exports.adminGetUsers = async (req, res) => {
+  try {
+      const users = await User.find().select('-password');
+      res.status(200).json({ users });
+  } catch (error) {
+      logger.error(`Error fetching users for admin: ${error.message}`);
+      res.status(500).json({ error: 'An error occurred while fetching users.' });
   }
 };

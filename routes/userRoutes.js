@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { ensureAuthenticated } = require('../middlewares/auth');
+const { ensureAuthenticated, ensureAdmin } = require('../middlewares/auth');
 const csurf = require('csurf');
 const csrfProtection = csurf({ cookie: true });
 
@@ -20,6 +20,7 @@ router.get('/', userController.getAllUsers);
 router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
 router.get('/status', userController.checkAuthenticationStatus);
+router.get('/admin/manage', ensureAuthenticated, ensureAdmin, userController.adminGetUsers);
 router.get('/admin', ensureAuthenticated, userController.checkAdmin);
 router.get('/:userId', userController.getUserById);
 router.get('/username/:username', userController.getUserByUsername);
