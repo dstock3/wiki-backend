@@ -56,6 +56,10 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isBanned: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const MailingListSchema = new mongoose.Schema({
