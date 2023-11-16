@@ -107,6 +107,10 @@ exports.loginUser = async (req, res, next) => {
       return res.status(403).json({ error: "Account is temporarily locked" });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({ error: 'Your account has been banned.' });
+    }
+
     const isMatch = await user.comparePassword(req.body.password);
 
     if (isMatch) {
