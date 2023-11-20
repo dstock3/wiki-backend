@@ -46,13 +46,14 @@ exports.createArticle = [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessage = errors.array().map(err => err.msg).join(', ');
-
+            
             logger.warn({
                 action: 'Validation failed for creating article',
                 errorMessage: errorMessage,
                 requestPayload: req.body,
                 userId: req.user ? req.user._id : null
             });
+
             
             return res.status(400).json({ error: errorMessage });
         }
@@ -94,13 +95,23 @@ exports.createArticle = [
             
             res.status(201).json(article);
         } catch (error) {
-            logger.error({
+            const errorPayload = {
                 action: 'Error creating article',
                 errorMessage: error.message,
                 portalId: portalid,
-                requestPayload: req.body,
+                requestPayload: {
+                    ...req.body,
+                    content: req.body.content.map(contentItem => {
+                        if (contentItem.image && contentItem.image.src) {
+                            contentItem.image.src = 'data:image/png;base64,...';
+                        }
+                        return contentItem;
+                    }
+                )},
                 userId: req.user ? req.user._id : null
-            });
+            };
+
+            logger.error(errorPayload);
 
             res.status(400).json({ message: error.message });
         }
@@ -181,13 +192,23 @@ exports.updateArticle = [
 
             res.json(article);
         } catch (error) {
-            logger.error({
-                action: 'Error updating article',
+            const errorPayload = {
+                action: 'Error creating article',
                 errorMessage: error.message,
-                articleId: req.params.articleId,
-                requestPayload: req.body,
+                portalId: portalid,
+                requestPayload: {
+                    ...req.body,
+                    content: req.body.content.map(contentItem => {
+                        if (contentItem.image && contentItem.image.src) {
+                            contentItem.image.src = 'data:image/png;base64,...';
+                        }
+                        return contentItem;
+                    }
+                )},
                 userId: req.user ? req.user._id : null
-            });
+            };
+
+            logger.error(errorPayload);
 
             res.status(400).json({ message: error.message });
         }
