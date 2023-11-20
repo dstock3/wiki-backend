@@ -109,7 +109,7 @@ exports.createPortal = [
         logger.error({
             action: 'Error creating portal',
             errorMessage: err.message,
-            requestPayload: req.body,
+            portalTitle: req.body.portalTitle,
             userId: req.user ? req.user._id : null
         });
 
@@ -159,7 +159,6 @@ exports.updatePortal = [
                 action: 'Error updating portal',
                 errorMessage: err.message,
                 portalId: req.params.portalId,
-                requestPayload: req.body,
                 userId: req.user ? req.user._id : null
             });
 
