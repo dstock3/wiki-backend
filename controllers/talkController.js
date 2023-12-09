@@ -289,11 +289,7 @@ exports.createComment = [
   async (req, res) => {
     console.log("Starting comment creation middleware");
     try {
-      console.log("Request Parameters:", req.params);
-      console.log("Request Body:", req.body);
-
       const errors = validationResult(req);
-      console.log("Validation Errors:", errors.array());
       if (!errors.isEmpty()) {
           const errorMessage = errors.array().map(err => err.msg).join(', ');
           return res.status(400).json({ error: errorMessage });
@@ -303,21 +299,17 @@ exports.createComment = [
       const topicId = req.params.topicId;
 
       const article = await Article.findById(articleId);
-      console.log("Article Found:", article);
       if (!article) {
           throw new Error('Article not found');
       }
 
       const user = await User.findById(req.user._id);
-      console.log("User Found:", user);
       if (!user) {
           throw new Error('User not found');
       }
 
       const talkPage = await TalkPage.findOne({ articleId: articleId });
-      console.log("TalkPage Found:", talkPage);
       const topic = talkPage.discussions.id(topicId);
-      console.log("Topic Found:", topic);
       if (!topic) {
           throw new Error('Topic not found');
       }
@@ -332,13 +324,8 @@ exports.createComment = [
         date: new Date()
       });
 
-      console.log("Comments before adding:", topic.comments);
       topic.comments.push(commentData);
-      console.log("Comments after adding:", topic.comments);
-
-      console.log("TalkPage before save:", talkPage);
       await talkPage.save();
-      console.log("TalkPage saved successfully");
 
       logger.info({
         action: 'Comment created',
@@ -350,11 +337,7 @@ exports.createComment = [
       });
 
       user.contributions.comments.push(article._id);
-      console.log("User before save:", user);
       await user.save();
-      console.log("User saved successfully");
-
-      console.log("Sending success response");
       res.status(201).json({
         message: "Comment added successfully!",
         comment: {
