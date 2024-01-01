@@ -413,3 +413,30 @@ exports.adminUnbanUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.adminResetPassword = async (req, res) => {
+  try {
+    const userId = req.params.userId; 
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    if (!req.body.password || req.body.password.length < 6) {
+      return res.status(400).json({ error: 'A valid new password is required.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    user.password = hashedPassword;
+    await user.save(); 
+
+    logger.info(`Password for user ${user.username} has been reset by admin ${req.user.username}`);
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    logger.error(`Error resetting password: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+};
