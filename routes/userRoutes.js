@@ -23,8 +23,9 @@ router.post('/logout', userController.logoutUser);
 router.get('/status', userController.checkAuthenticationStatus);
 
 // Admin Routes
-router.put('/admin/ban/:userId', ensureAuthenticated, ensureAdmin, userController.adminBanUser);
-router.delete('/admin/:userId', ensureAuthenticated, ensureAdmin, userController.adminDeleteUser);
+router.put('/admin/ban/:userId', ensureAuthenticated, ensureAdmin, csrfProtection, userController.adminBanUser);
+router.put('/admin/unban/:userId', ensureAuthenticated, ensureAdmin, csrfProtection, userController.adminUnbanUser);
+router.delete('/admin/:userId', ensureAuthenticated, ensureAdmin, csrfProtection, userController.adminDeleteUser);
 router.get('/admin/manage', ensureAuthenticated, ensureAdmin, userController.adminGetUsers);
 router.get('/admin', ensureAuthenticated, userController.checkAdmin);
 

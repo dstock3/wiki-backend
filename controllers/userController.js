@@ -394,3 +394,22 @@ exports.adminBanUser = async (req, res) => {
   }
 };
 
+exports.adminUnbanUser = async (req, res) => {
+  try {
+    const userId = req.params.userId; 
+    const user = await User.findById(userId); 
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    user.isBanned = false;
+    await user.save(); 
+
+    logger.info(`User ${user.username} has been unbanned by admin ${req.user.username}`);
+    res.status(200).json({ message: 'User has been unbanned successfully.' });
+  } catch (error) {
+    logger.error(`Error unbanning user: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+};
