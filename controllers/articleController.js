@@ -325,12 +325,21 @@ exports.updateSection = [
             if (!article) {
                 return res.status(404).json({ message: 'Article not found' });
             }
+
             const section = article.content.id(req.params.sectionId);
             if (!section) {
                 return res.status(404).json({ message: 'Section not found' });
             }
-            req.body.text = sanitizeContent(req.body.text);
-            section.set(req.body);
+
+            if (req.body.text) {
+                section.text = sanitizeContent(req.body.text);
+            }
+
+            if (req.file) {
+                const imagePath = req.file.path; 
+                section.image = imagePath; 
+            }
+
             await article.save();
 
             logger.info({
@@ -338,7 +347,8 @@ exports.updateSection = [
                 articleId: req.params.articleId,
                 sectionId: req.params.sectionId,
                 updatedBy: req.user ? req.user._id : null,
-                updatedDate: new Date().toISOString()
+                updatedDate: new Date().toISOString(),
+                imagePath: section.image 
             });
 
             res.json(section);
