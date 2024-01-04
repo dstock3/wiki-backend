@@ -27,9 +27,14 @@ const ContentSchema = new mongoose.Schema({
         required: true
     },
     image: {
-        alt: String,
-        src: String
-    }
+        src: {
+            type: String
+        },
+        alt: {
+            type: String,
+            default: ''
+        }
+    },
 });
 
 const InfoBoxSchema = new mongoose.Schema({
