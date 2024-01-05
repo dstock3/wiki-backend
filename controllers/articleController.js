@@ -54,7 +54,6 @@ exports.createArticle = [
                 userId: req.user ? req.user._id : null
             });
 
-            
             return res.status(400).json({ error: errorMessage });
         }
         
@@ -334,22 +333,18 @@ exports.updateSection = [
             if (req.body.title) {
                 section.title = req.body.title;
             }
-
             if (req.body.text) {
                 section.text = sanitizeContent(req.body.text);
             }
 
-            if (req.file) {
-                const imagePath = req.file.path; 
-                section.image.src = imagePath;
-
+            if (req.body.image) {
+                section.image.src = req.body.image;  
                 if(req.body.imageAlt) {
                     section.image.alt = req.body.imageAlt;
                 }
             }
 
             await article.save();
-
             logger.info({
                 action: 'Section updated',
                 articleId: req.params.articleId,
