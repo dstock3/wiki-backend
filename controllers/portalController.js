@@ -129,7 +129,9 @@ exports.updatePortal = [
             }
 
             const isViewerOwner = req.user && portalExists.owner.equals(req.user._id);
-            if (!isViewerOwner) {
+            const isViewerAdmin = req.user && req.user.isAdmin;
+
+            if (!isViewerOwner && !isViewerAdmin) {
                 return res.status(403).json({ error: 'You do not have permission to update this portal' });
             }
 
@@ -176,7 +178,9 @@ exports.deletePortal = async (req, res) => {
         }
         
         const isViewerOwner = req.user && portal.owner.equals(req.user._id);
-        if (!isViewerOwner) {
+        const isViewerAdmin = req.user && req.user.isAdmin;
+        
+        if (!isViewerOwner && !isViewerAdmin) {
             return res.status(403).json({ error: 'You do not have permission to delete this portal' });
         }
         

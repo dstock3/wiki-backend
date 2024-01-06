@@ -259,7 +259,10 @@ exports.updateUser = [
         return res.status(404).json({ errors: [{ msg: 'User not found' }] });
       }
 
-      if (req.user.username !== req.body.username) {
+      const isSelf = req.user._id.equals(oldUserData._id);
+      const isAdmin = req.user.isAdmin;
+
+      if (!isSelf && !isAdmin) {
         return res.status(403).json({ errors: [{ msg: 'You are not authorized to perform this action' }] });
       }
 
@@ -309,7 +312,10 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (req.user.username !== user.username) {
+    const isSelf = req.user._id.equals(user._id);
+    const isAdmin = req.user.isAdmin;
+
+    if (!isSelf && !isAdmin) {
       return res.status(403).json({ error: 'You are not authorized to perform this action' });
     }
 
@@ -321,7 +327,9 @@ exports.deleteUser = async (req, res) => {
       action: 'User deleted',
       username: user.username,
       email: user.email,
-      deletedDate: new Date().toISOString()
+      deletedDate: new Date().toISOString(),
+      performedBy: req.user._id,
+      isAdmin: isAdmin
     });
 
     res.status(204).json({ message: 'User deleted successfully' });

@@ -168,42 +168,36 @@ exports.updateArticle = [
             return res.status(400).json({ error: errorMessage });
         }
         try {
-            const article = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
-
-            logger.info({
-                action: 'Article updated',
-                articleId: article._id,
-                userId: req.user._id,
-                updatedDate: new Date().toISOString(),
-                updatedFields: Object.keys(req.body)
-            });
+            const article = await Article.findById(req.params.articleId);
 
             if (!article) {
                 return res.status(404).json({ message: 'Article not found' });
             }
 
-            const user = await User.findById(req.user._id);
+            const isAuthor = req.user._id.equals(article.author);
+            const isAdmin = req.user.isAdmin;
 
-            if (!user.contributions.articles.includes(article._id)) {
-                user.contributions.articles.push(article._id);
-                await user.save();
+            if (!isAuthor && !isAdmin) {
+                return res.status(403).json({ message: 'You do not have permission to update this article' });
             }
 
-            res.json(article);
+            const updatedArticle = await Article.findByIdAndUpdate(req.params.articleId, req.body, { new: true });
+
+            logger.info({
+                action: 'Article updated',
+                articleId: updatedArticle._id,
+                userId: req.user._id,
+                updatedDate: new Date().toISOString(),
+                updatedFields: Object.keys(req.body)
+            });
+
+            res.json(updatedArticle);
         } catch (error) {
             const errorPayload = {
-                action: 'Error creating article',
+                action: 'Error updating article',
                 errorMessage: error.message,
-                portalId: portalid,
-                requestPayload: {
-                    ...req.body,
-                    content: req.body.content.map(contentItem => {
-                        if (contentItem.image && contentItem.image.src) {
-                            contentItem.image.src = 'data:image/png;base64,...';
-                        }
-                        return contentItem;
-                    }
-                )},
+                articleId: req.params.articleId,
+                requestPayload: req.body,
                 userId: req.user ? req.user._id : null
             };
 
@@ -216,11 +210,19 @@ exports.updateArticle = [
 
 exports.deleteArticle = async (req, res) => {
     try {
-        const article = await Article.findByIdAndRemove(req.params.articleId);
+        const article = await Article.findById(req.params.articleId);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
+        
+        const isAuthor = req.user._id.equals(article.author);
+        const isAdmin = req.user.isAdmin;
 
+        if (!isAuthor && !isAdmin) {
+            return res.status(403).json({ message: 'You do not have permission to delete this article' });
+        }
+
+        await Article.findByIdAndRemove(req.params.articleId);
         await User.updateMany(
             { "contributions.articles": req.params.articleId },
             { $pull: { "contributions.articles": req.params.articleId } }
