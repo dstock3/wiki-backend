@@ -133,7 +133,8 @@ exports.getArticleById = async (req, res) => {
             return res.status(404).json({ message: 'Article not found' });
         }
         const isAuthor = req.user ? req.user._id.equals(article.author) : false;
-        res.status(200).json({ article, isAuthor });
+        const isAdmin = req.user ? req.user.isAdmin : false;
+        res.status(200).json({ article, isAuthor, isAdmin });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

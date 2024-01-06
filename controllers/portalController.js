@@ -34,7 +34,9 @@ exports.getPortalById = async (req, res) => {
         const isViewerOwner = req.user && portal.owner.equals(req.user._id);
         portal.isViewerOwner = isViewerOwner;
 
-        res.status(200).json({ portal, isViewerOwner });
+        const isAdmin = req.user && req.user.isAdmin;
+
+        res.status(200).json({ portal, isViewerOwner, isAdmin });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
