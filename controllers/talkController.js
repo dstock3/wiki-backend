@@ -161,10 +161,10 @@ exports.createTopic = [
 exports.updateTopic = [
   ...topicValidationRules,
   async (req, res) => {
-    const { articleId, topicId } = req.params;
-    const talkPage = await TalkPage.findOne({ articleId: articleId });
-    
     try {
+      const { articleId, topicId } = req.params;
+      const talkPage = await TalkPage.findOne({ articleId: articleId });
+
       if (!talkPage) {
         return res.status(404).json({ error: 'TalkPage not found' });
       }
@@ -173,10 +173,13 @@ exports.updateTopic = [
       if (!topic) {
         return res.status(404).json({ error: 'Topic not found' });
       }
+
+      const isAdmin = req.user && req.user.isAdmin;
       
-      if (!topic.author.equals(req.user._id)) {
+      if (!isAdmin && !topic.author.equals(req.user._id)) {
         return res.status(403).json({ error: 'You do not have permission to edit this topic' });
       }
+
       const sanitizedContent = sanitizeContent(req.body.content);
       const updatedData = {
         ...req.body,
@@ -195,8 +198,7 @@ exports.updateTopic = [
       });
 
       const user = await User.findById(req.user._id);
-
-      if (!user.contributions.topics.includes(topic._id)) {
+      if (user && !user.contributions.topics.includes(topic._id)) {
         user.contributions.topics.push(topic._id);
         await user.save();
       }
@@ -207,8 +209,8 @@ exports.updateTopic = [
         action: 'Error updating topic',
         errorMessage: error.message,
         errorStack: error.stack,
-        topicId: topicId,
-        talkPageId: talkPage._id,
+        topicId: req.params.topicId,
+        talkPageId: talkPage ? talkPage._id : null,
         userId: req.user ? req.user._id : null
       });
 
@@ -233,12 +235,13 @@ exports.deleteTopic = async (req, res) => {
       return res.status(404).json({ error: 'Topic not found' });
     }
 
+    const isAdmin = req.user && req.user.isAdmin;
     const articleAuthor = await Article.findById(articleId).author;
 
     let isAuthorized = false;
 
     if (req.user) {
-      if (req.user._id.equals(articleAuthor) || req.user._id.equals(topic.author)) {
+      if (isAdmin || req.user._id.equals(articleAuthor) || req.user._id.equals(topic.author)) {
         isAuthorized = true;
       }
     }
