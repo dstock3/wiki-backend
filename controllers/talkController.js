@@ -23,6 +23,8 @@ exports.getTalkPage = async (req, res) => {
       return res.status(404).json({ error: 'TalkPage not found' });
     }
 
+    const isAdmin = req.user && req.user.isAdmin;
+
     let userIds = new Set();
     talkPage.discussions.forEach(topic => {
       userIds.add(topic.author);
@@ -58,7 +60,7 @@ exports.getTalkPage = async (req, res) => {
 
     const isAuthorized = req.user ? true : false;
 
-    res.status(200).json({ talkPage, isAuthorized });
+    res.status(200).json({ talkPage, isAuthorized, isAdmin });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
@@ -391,18 +393,14 @@ exports.updateComment = [
         return res.status(404).json({ error: 'Comment not found' });
       }
 
-      if (!comment.author.equals(req.user._id)) {
+      const isAdmin = req.user && req.user.isAdmin;
+      if (!comment.author.equals(req.user._id) && !isAdmin) {
         return res.status(403).json({ error: 'You do not have permission to edit this comment' });
       }
 
       const sanitizedContent = sanitizeContent(req.body.content);
+      comment.content = sanitizedContent;
 
-      const updatedData = {
-        ...req.body,
-        content: sanitizedContent
-      };
-
-      Object.assign(comment, updatedData);
       await talkPage.save();
 
       logger.info({
@@ -413,29 +411,17 @@ exports.updateComment = [
         updatedDate: new Date().toISOString()
       });
 
-      const user = await User.findById(req.user._id);
-      if (!user.contributions.comments.includes(comment._id)) {
-        user.contributions.comments.push(comment._id);
-        await user.save();
-      }
-
-      const populatedTalkPage = await TalkPage.findOne({ _id: talkPage._id })
-        .populate('discussions.comments.author', 'username');
-
-      const populatedTopic = populatedTalkPage.discussions.id(topicId);
-      const populatedComment = populatedTopic.comments.id(commentId);
-
       res.status(200).json({
-        ...populatedComment.toObject(),
-        author: populatedComment.author.username 
+        ...comment.toObject(),
+        author: req.user.username  
       });
     } catch (error) {
       logger.error({
         action: 'Error updating comment',
         errorMessage: error.message,
         errorStack: error.stack,
-        commentId: commentId,
-        topicId: topicId,
+        commentId: req.params.commentId,  
+        topicId: req.params.topicId,
         userId: req.user ? req.user._id : null
       });
 
@@ -450,14 +436,17 @@ exports.deleteComment = async (req, res) => {
   try {
     const talkPage = await TalkPage.findOne({ 'discussions._id': topicId });
     const article = await Article.findById(articleId);
-    const articleAuthor = article.author;
+
+    if (!talkPage || !article) {
+      return res.status(404).json({ error: 'Article or TalkPage not found' });
+    }
+
     const topic = talkPage.discussions.id(topicId);
-    const comment = topic.comments.id(commentId);
+    const comment = topic ? topic.comments.id(commentId) : null;
 
-    let isAuthorized = false;
-
-    if (req.user) {
-      if (req.user._id.equals(articleAuthor) || (comment && req.user._id.equals(comment.author))) {
+    let isAuthorized = req.user && req.user.isAdmin;
+    if (req.user && comment) {
+      if (req.user._id.equals(article.author) || req.user._id.equals(comment.author)) {
         isAuthorized = true;
       }
     }
@@ -473,7 +462,6 @@ exports.deleteComment = async (req, res) => {
       return res.status(404).json({ error: 'Comment not found' });
     }
 
-
     logger.info({
       action: 'Comment deleted',
       commentId: comment._id,
@@ -481,7 +469,6 @@ exports.deleteComment = async (req, res) => {
       authorId: req.user._id,
       deletedDate: new Date().toISOString()
     });
-
 
     const user = await User.findById(req.user._id);
     if (user) {
