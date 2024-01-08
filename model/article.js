@@ -33,6 +33,11 @@ const ContentSchema = new mongoose.Schema({
         alt: {
             type: String,
             default: ''
+        },
+        align: {
+            type: String,
+            enum: ['left', 'right'],
+            default: 'left'
         }
     },
 });
@@ -46,11 +51,6 @@ const InfoBoxSchema = new mongoose.Schema({
         alt: {
             type: String,
             default: ''
-        },
-        align: {
-            type: String,
-            enum: ['left', 'right'],
-            default: 'left'
         }
     },
     info: [InfoSchema]
