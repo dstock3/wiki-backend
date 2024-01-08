@@ -132,7 +132,7 @@ exports.getArticleById = async (req, res) => {
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
-        const isAuthor = req.user ? req.user._id.equals(article.author) : false;
+        const isAuthor = req.user ? req.user._id.equals(article.author) : false;        
         const isAdmin = req.user ? req.user.isAdmin : false;
         res.status(200).json({ article, isAuthor, isAdmin });
     } catch (error) {
@@ -342,8 +342,11 @@ exports.updateSection = [
 
             if (req.body.image) {
                 section.image.src = req.body.image;  
-                if(req.body.imageAlt) {
+                if (req.body.imageAlt) {
                     section.image.alt = req.body.imageAlt;
+                }
+                if (req.body.imageAlignment) {
+                    section.image.align = req.body.imageAlignment;
                 }
             }
 
