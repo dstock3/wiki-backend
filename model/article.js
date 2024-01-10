@@ -42,6 +42,12 @@ const ContentSchema = new mongoose.Schema({
     },
 });
 
+const categoryColors = [
+    'maroon', 'chocolate', 'salmon', 'pink', 'yellow', 'lavender',
+    'orange', 'lightgreen', 'darkseagreen', 'lightblue', 'darkturquoise',
+    'deepskyblue', 'navy', 'lightgrey', 'black', 'lightsteelblue', 'powderblue'
+];
+
 const InfoBoxSchema = new mongoose.Schema({
     title: String,
     image: {
@@ -52,6 +58,11 @@ const InfoBoxSchema = new mongoose.Schema({
             type: String,
             default: ''
         }
+    },
+    category: {
+        type: String,
+        enum: categoryColors,
+        default: 'lightgrey'
     },
     info: [InfoSchema]
 });
