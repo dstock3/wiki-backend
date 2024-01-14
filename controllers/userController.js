@@ -463,11 +463,11 @@ exports.sendContactMessage = async (req, res) => {
       });
 
       let mailOptions = {
-          from: email, 
-          to: process.env.CONTACT_EMAIL, 
-          subject: subject, 
-          text: message,
-      };
+        from: email,
+        to: process.env.CONTACT_EMAIL,
+        subject: subject,
+        text: `You have received a new message from ${name}:\n\n${message}`,
+    };
 
       let info = await transporter.sendMail(mailOptions);
       console.log('Message sent: %s', info.messageId);
