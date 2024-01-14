@@ -8,6 +8,7 @@ const logger = require('../logger');
 require('dotenv').config();
 NAME = process.env.SESSION_NAME;
 const sanitize = require('../util/sanitize');
+const nodemailer = require('nodemailer');
 
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5;
 const LOCK_TIME = parseInt(process.env.LOCK_TIME, 10) || 2 * 60 * 60 * 1000; 
@@ -446,5 +447,34 @@ exports.adminResetPassword = async (req, res) => {
   } catch (error) {
     logger.error(`Error resetting password: ${error.message}`);
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.sendContactMessage = async (req, res) => {
+  try {
+      const { name, email, subject, message } = req.body;
+
+      let transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.PASSWORD, 
+          },
+      });
+
+      let mailOptions = {
+          from: email, 
+          to: process.env.CONTACT_EMAIL, 
+          subject: subject, 
+          text: message,
+      };
+
+      let info = await transporter.sendMail(mailOptions);
+      console.log('Message sent: %s', info.messageId);
+
+      res.status(200).json({ message: 'Message sent successfully' });
+  } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ error: 'Error sending message' });
   }
 };

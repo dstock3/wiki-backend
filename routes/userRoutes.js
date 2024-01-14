@@ -22,6 +22,9 @@ router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
 router.get('/status', userController.checkAuthenticationStatus);
 
+// Contact Form Route
+router.post('/contact', userController.sendContactMessage);
+
 // Admin Routes
 router.put('/admin/ban/:userId', ensureAuthenticated, ensureAdmin, csrfProtection, userController.adminBanUser);
 router.put('/admin/unban/:userId', ensureAuthenticated, ensureAdmin, csrfProtection, userController.adminUnbanUser);
